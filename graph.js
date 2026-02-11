@@ -4,34 +4,19 @@
 
 const svg = d3.select("#networkSVG");
 const histSVG = d3.select("#histSVG");
-const histSVG = d3.select("#histSVG");
 const logSVG = d3.select("#logSVG");
+const tooltip = d3.select("body")
+  .append("div")
+  .style("position", "absolute")
+  .style("background", "white")
+  .style("padding", "6px")
+  .style("border", "1px solid #ccc")
+  .style("font-size", "12px")
+  .style("display", "none");
 
 const container = svg.append("g");
 
-// Sidebar horizontal toggle
-document.getElementById("sidebarToggle")
-  .addEventListener("click", () => {
-    document.getElementById("sidebar")
-      .classList.toggle("collapsed");
-
-    // Recenter graph after layout change
-    setTimeout(() => {
-      if (window.currentSimulation) {
-        window.currentSimulation.alpha(0.5).restart();
-      }
-    }, 300);
-  });
-
-// Vertical section toggle
-document.querySelectorAll(".section-header")
-  .forEach(header => {
-    header.addEventListener("click", () => {
-      const section = header.parentElement;
-      section.classList.toggle("open");
-    });
-  });
-
+// Zoom
 svg.call(
   d3.zoom().on("zoom", (event) => {
     container.attr("transform", event.transform);
@@ -39,42 +24,56 @@ svg.call(
 );
 
 // =============================
+// SIDEBAR TOGGLES
+// =============================
+
+document.getElementById("sidebarToggle")
+  .addEventListener("click", () => {
+    document.getElementById("sidebar")
+      .classList.toggle("collapsed");
+
+    setTimeout(() => {
+      if (window.currentSimulation) {
+        window.currentSimulation.alpha(0.5).restart();
+      }
+    }, 300);
+  });
+
+document.querySelectorAll(".section-header")
+  .forEach(header => {
+    header.addEventListener("click", () => {
+      header.parentElement.classList.toggle("open");
+    });
+  });
+
+// =============================
 // LOAD DROPDOWN
 // =============================
 
 d3.json("networks.json")
   .then(files => {
-
     const select = d3.select("#networkSelect");
 
     select.selectAll("option")
       .data(files)
       .enter()
       .append("option")
-      .attr("value", d => d)              // KEEP .gml internally
-      .text(d => d.replace(".gml",""));  // Display without .gml
-
+      .attr("value", d => d)
+      .text(d => d.replace(".gml",""));
   })
-  .catch(err => {
-    console.error("Failed to load networks.json:", err);
-  });
+  .catch(err => console.error("Failed to load networks.json:", err));
 
 // =============================
-// BUTTON EVENTS
+// BUTTON EVENT
 // =============================
 
 document.getElementById("loadBtn")
   .addEventListener("click", () => {
 
     const file = document.getElementById("networkSelect").value;
+    if (!file) return;
 
     loadGML("networks/" + file, file);
-  });
-
-document.getElementById("toggleProperties")
-  .addEventListener("click", () => {
-    document.getElementById("propertiesPanel")
-      .classList.toggle("open");
   });
 
 // =============================
@@ -83,12 +82,11 @@ document.getElementById("toggleProperties")
 
 function loadGML(path, fileName) {
 
-  // 🔥 OPEN SECTIONS FIRST
+  // Open sidebar sections first
   document.getElementById("propertiesSection").classList.add("open");
   document.getElementById("degreeSection").classList.add("open");
   document.getElementById("descriptionSection").classList.add("open");
 
-  // Wait for layout to update
   setTimeout(() => {
 
     d3.text(path)
@@ -102,52 +100,37 @@ function loadGML(path, fileName) {
         loadMetadata(fileName);
 
       })
-      .catch(err => {
-        console.error("Failed to load GML:", err);
-      });
+      .catch(err => console.error("Failed to load GML:", err));
 
-  }, 200);  // allow DOM reflow
+  }, 200);
 }
 
-// ============================
-// Load Metadata
-// ============================
+// =============================
+// LOAD METADATA
+// =============================
 
 function loadMetadata(fileName) {
-
-  console.log("Loading metadata for:", fileName);
 
   d3.json("network-metadata.json")
     .then(meta => {
 
-      console.log("Metadata object:", meta);
-
       if (meta[fileName]) {
-
         document.getElementById("description").innerHTML = `
-          <h3>Description & Citations</h3>
           <p><strong>Description:</strong><br>
           ${meta[fileName].description}</p>
           <p><strong>Citation:</strong><br>
           ${meta[fileName].citation}</p>
         `;
-
       } else {
-
-        document.getElementById("description").innerHTML = `
-          <h3>Description & Citations</h3>
-          <p style="color:red;">No metadata found for ${fileName}</p>
-        `;
+        document.getElementById("description").innerHTML =
+          `<p>No metadata found for ${fileName}</p>`;
       }
-
     })
-    .catch(err => {
-      console.error("Metadata failed to load:", err);
-    });
+    .catch(err => console.error("Metadata failed:", err));
 }
 
 // =============================
-// PARSE GML (ROBUST VERSION)
+// PARSE GML
 // =============================
 
 function parseGML(text) {
@@ -161,24 +144,19 @@ function parseGML(text) {
   let match;
 
   while ((match = nodeRegex.exec(text)) !== null) {
-    const block = match[1];
-    const idMatch = block.match(/id\s+("?[\w\d]+"?)/);
+    const idMatch = match[1].match(/id\s+("?[\w\d]+"?)/);
     if (idMatch) {
-      const cleanID = idMatch[1].replace(/"/g,"");
-      nodes.push({ id: cleanID });
+      nodes.push({ id: idMatch[1].replace(/"/g,"") });
     }
   }
 
   while ((match = edgeRegex.exec(text)) !== null) {
-    const block = match[1];
-
-    const sMatch = block.match(/source\s+("?[\w\d]+"?)/);
-    const tMatch = block.match(/target\s+("?[\w\d]+"?)/);
-
-    if (sMatch && tMatch) {
+    const s = match[1].match(/source\s+("?[\w\d]+"?)/);
+    const t = match[1].match(/target\s+("?[\w\d]+"?)/);
+    if (s && t) {
       links.push({
-        source: sMatch[1].replace(/"/g,""),
-        target: tMatch[1].replace(/"/g,"")
+        source: s[1].replace(/"/g,""),
+        target: t[1].replace(/"/g,"")
       });
     }
   }
@@ -214,8 +192,7 @@ function computeProperties(graph) {
     ["Min Degree", d3.min(degrees)]
   ];
 
-  let table = "<table>";
-  table += "<tr><th>#</th><th>Metric</th><th>Value</th></tr>";
+  let table = "<table><tr><th>#</th><th>Metric</th><th>Value</th></tr>";
 
   metrics.forEach((row,i)=>{
     table += `<tr>
@@ -236,27 +213,13 @@ function computeProperties(graph) {
 
 function drawGraph(graph) {
 
-  // Clear previous graph
   container.selectAll("*").remove();
 
   const containerDiv = document.getElementById("graphContainer");
-
   const width = containerDiv.clientWidth;
   const height = containerDiv.clientHeight;
 
-  if (width === 0 || height === 0) {
-    console.warn("Graph container has zero size.");
-    return;
-  }
-
-  // Resize SVG explicitly
-  svg
-    .attr("width", width)
-    .attr("height", height);
-
-  // --------------------------
-  // Compute degrees
-  // --------------------------
+  svg.attr("width", width).attr("height", height);
 
   const degree = {};
   graph.nodes.forEach(n => degree[n.id] = 0);
@@ -268,133 +231,57 @@ function drawGraph(graph) {
 
   graph.nodes.forEach(n => n.degree = degree[n.id]);
 
-  // --------------------------
-  // Build adjacency map
-  // --------------------------
-
-  const adjacency = {};
-  graph.links.forEach(l => {
-    adjacency[l.source + "-" + l.target] = true;
-    adjacency[l.target + "-" + l.source] = true;
-  });
-
-  // --------------------------
-  // Scales
-  // --------------------------
-
   const maxDegree = d3.max(graph.nodes, d => d.degree) || 1;
 
   const sizeScale = d3.scaleSqrt()
-    .domain([0, maxDegree])
-    .range([4, 18]);
+    .domain([0,maxDegree])
+    .range([4,18]);
 
   const colorScale = d3.scaleSequential(d3.interpolateBlues)
-    .domain([0, maxDegree]);
-
-  // --------------------------
-  // Force Simulation
-  // --------------------------
+    .domain([0,maxDegree]);
 
   const simulation = d3.forceSimulation(graph.nodes)
     .force("link", d3.forceLink(graph.links)
       .id(d => d.id)
       .distance(70))
     .force("charge", d3.forceManyBody().strength(-250))
-    .force("collision",
-      d3.forceCollide().radius(d => sizeScale(d.degree) + 2))
-    .force("center", d3.forceCenter(width / 2, height / 2));
+    .force("center", d3.forceCenter(width/2,height/2));
 
-  // Store globally (important for sidebar resize)
   window.currentSimulation = simulation;
 
-  // --------------------------
-  // Draw Links
-  // --------------------------
-
-  const link = container.append("g")
-    .selectAll("line")
+  const link = container.selectAll("line")
     .data(graph.links)
     .enter()
-    .append("line")
-    .attr("stroke", "#444")
-    .attr("stroke-width", 1.5)
-    .attr("stroke-opacity", 0.9);
+    .append("line");
 
-  // --------------------------
-  // Draw Nodes
-  // --------------------------
-
-  const node = container.append("g")
-    .selectAll("circle")
+  const node = container.selectAll("circle")
     .data(graph.nodes)
     .enter()
     .append("circle")
     .attr("r", d => sizeScale(d.degree))
     .attr("fill", d => colorScale(d.degree))
-    .attr("stroke", "#333")
-    .attr("stroke-width", 1)
-    .style("cursor", "pointer")
-
-    // Tooltip
-    .on("mouseover", (event, d) => {
-      tooltip
-        .style("display", "block")
+    .on("mouseover", (event,d)=>{
+      tooltip.style("display","block")
         .html(`Node: ${d.id}<br>Degree: ${d.degree}`);
     })
-    .on("mousemove", (event) => {
-      tooltip
-        .style("left", (event.pageX + 10) + "px")
-        .style("top", (event.pageY + 10) + "px");
+    .on("mousemove",(event)=>{
+      tooltip.style("left",(event.pageX+10)+"px")
+             .style("top",(event.pageY+10)+"px");
     })
-    .on("mouseout", () => {
-      tooltip.style("display", "none");
-    })
+    .on("mouseout",()=>{
+      tooltip.style("display","none");
+    });
 
-    // Neighbor highlight on click
-    .on("click", (event, d) => {
-
-      node.style("opacity", o =>
-        adjacency[d.id + "-" + o.id] || d.id === o.id ? 1 : 0.1
-      );
-
-      link.style("stroke-opacity", o =>
-        o.source.id === d.id || o.target.id === d.id ? 1 : 0.1
-      );
-    })
-
-    // Dragging
-    .call(d3.drag()
-      .on("start", (event, d) => {
-        if (!event.active) simulation.alphaTarget(0.3).restart();
-        d.fx = d.x;
-        d.fy = d.y;
-      })
-      .on("drag", (event, d) => {
-        d.fx = event.x;
-        d.fy = event.y;
-      })
-      .on("end", (event, d) => {
-        if (!event.active) simulation.alphaTarget(0);
-        d.fx = null;
-        d.fy = null;
-      })
-    );
-
-  // --------------------------
-  // Simulation Tick
-  // --------------------------
-
-  simulation.on("tick", () => {
-
+  simulation.on("tick",()=>{
     link
-      .attr("x1", d => d.source.x)
-      .attr("y1", d => d.source.y)
-      .attr("x2", d => d.target.x)
-      .attr("y2", d => d.target.y);
+      .attr("x1",d=>d.source.x)
+      .attr("y1",d=>d.source.y)
+      .attr("x2",d=>d.target.x)
+      .attr("y2",d=>d.target.y);
 
     node
-      .attr("cx", d => d.x)
-      .attr("cy", d => d.y);
+      .attr("cx",d=>d.x)
+      .attr("cy",d=>d.y);
   });
 }
 
@@ -408,9 +295,8 @@ function drawDegreePlots(graph){
   logSVG.selectAll("*").remove();
 
   const degrees = graph.nodes.map(d=>d.degree);
-
-  const width = document.getElementById("histogram").clientWidth;
-  const height = document.getElementById("histogram").clientHeight;
+  const width = histSVG.node().clientWidth;
+  const height = histSVG.node().clientHeight;
 
   const margin = {top:30,right:20,bottom:40,left:50};
 

@@ -1,16 +1,22 @@
 {
   "karate.gml": {
-    "description": "Zachary's Karate Club network (1977). This dataset represents social interactions among 34 members of a university karate club. It is widely used in studies of community detection and network modularity.",
-    "citation": "Zachary, W. W. (1977). An Information Flow Model for Conflict and Fission in Small Groups. Journal of Anthropological Research, 33(4), 452–473."
+    "description": "The Karate network contains the network of friendships between the 34 members of a karate club at a US university, as described by Wayne Zachary in 1977.",
+    "citation": "W. W. Zachary, An information flow model for conflict and fission in small groups, Journal of Anthropological Research 33, 452-473 (1977)."
   },
-
+  "dolphins.gml": {
+    "description": "Synthetic scale-free network generated using preferential attachment.",
+    "citation": "Barabási, A.-L. & Albert, R. (1999). Emergence of scaling in random networks."
+  },
   "lesmis.gml": {
-    "description": "Character co-occurrence network from Victor Hugo's novel 'Les Misérables'. Nodes represent characters, and edges indicate joint appearances in chapters. Frequently used for testing graph visualization algorithms.",
-    "citation": "Knuth, D. E. (1993). The Stanford GraphBase: A Platform for Combinatorial Computing."
+    "description": "The Lesmis network is a weighted network of character co-appearances in Victor Hugo's novel 'Les Misérables'.  Nodes represent characters as indicated by the labels, and edges connect any pair of characters that appear in the same chapter of the book.  The values on the edges are the number of such coappearances.",
+    "citation": "D. E. Knuth, The Stanford GraphBase: A Platform for Combinatorial Computing, Addison-Wesley, Reading, MA (1993)."
   },
-
-  "ba_scale_free.gml": {
-    "description": "Synthetic scale-free network generated using the Barabási–Albert preferential attachment model. The network exhibits a power-law degree distribution and is commonly used to study complex network dynamics.",
-    "citation": "Barabási, A.-L., & Albert, R. (1999). Emergence of Scaling in Random Networks. Science, 286(5439), 509–512."
+  "adjnoun.gml": {
+    "description": "The Adjnoun network is the network of common adjective and noun adjacencies for the novel 'David Copperfield' by Charles Dickens, as described by M. Newman.  Nodes represent the most commonly occurring adjectives and nouns in the book.  Node values are 0 for adjectives and 1 for nouns.  Edges connect any pair of words that occur in adjacent positions in the text of the book.",
+    "citation": "M. E. J. Newman, Finding community structure in networks using the eigenvectors of matrices, Preprint physics/0605087 (2006)."
+  },
+  "polbooks.gml": {
+    "description": "Books about US Politics compiled by Valdis Krebs. Nodes represent books about US politics sold by the online bookseller Amazon.com.  Edges represent frequent co-purchasing of books by the same buyers, as indicated by the 'customers who bought this book also bought these other books' feature on Amazon. Nodes have been given values 'l', 'n', or 'c' to indicate whether they are 'liberal', 'neutral', or 'conservative'.  These alignments were assigned separately by Mark Newman based on a reading of the descriptions and reviews of the books posted on Amazon.",
+    "citation": "V. Krebs, unpublished, http://www.orgnet.com/."
   }
 }

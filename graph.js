@@ -83,30 +83,30 @@ document.getElementById("toggleProperties")
 
 function loadGML(path, fileName) {
 
-  d3.text(path)
-    .then(text => {
+  // 🔥 OPEN SECTIONS FIRST
+  document.getElementById("propertiesSection").classList.add("open");
+  document.getElementById("degreeSection").classList.add("open");
+  document.getElementById("descriptionSection").classList.add("open");
 
-      const graph = parseGML(text);
+  // Wait for layout to update
+  setTimeout(() => {
 
-      if (!graph.nodes.length) {
-        console.warn("No nodes found in GML.");
-        return;
-      }
+    d3.text(path)
+      .then(text => {
 
-      computeProperties(graph);
-      drawGraph(graph);
-      drawDegreePlots(graph);
-      loadMetadata(fileName);
+        const graph = parseGML(text);
 
-      // 🔥 STEP 5 — Auto-open sidebar sections
-      document.getElementById("propertiesSection").classList.add("open");
-      document.getElementById("degreeSection").classList.add("open");
-      document.getElementById("descriptionSection").classList.add("open");
+        computeProperties(graph);
+        drawGraph(graph);
+        drawDegreePlots(graph);
+        loadMetadata(fileName);
 
-    })
-    .catch(err => {
-      console.error("Failed to load GML:", err);
-    });
+      })
+      .catch(err => {
+        console.error("Failed to load GML:", err);
+      });
+
+  }, 200);  // allow DOM reflow
 }
 
 // ============================
@@ -236,6 +236,7 @@ function computeProperties(graph) {
 
 function drawGraph(graph) {
 
+  // Clear previous graph
   container.selectAll("*").remove();
 
   const containerDiv = document.getElementById("graphContainer");
@@ -243,7 +244,20 @@ function drawGraph(graph) {
   const width = containerDiv.clientWidth;
   const height = containerDiv.clientHeight;
 
-  // Degree computation
+  if (width === 0 || height === 0) {
+    console.warn("Graph container has zero size.");
+    return;
+  }
+
+  // Resize SVG explicitly
+  svg
+    .attr("width", width)
+    .attr("height", height);
+
+  // --------------------------
+  // Compute degrees
+  // --------------------------
+
   const degree = {};
   graph.nodes.forEach(n => degree[n.id] = 0);
 
@@ -254,14 +268,21 @@ function drawGraph(graph) {
 
   graph.nodes.forEach(n => n.degree = degree[n.id]);
 
-  // Adjacency for neighbor highlighting
+  // --------------------------
+  // Build adjacency map
+  // --------------------------
+
   const adjacency = {};
   graph.links.forEach(l => {
     adjacency[l.source + "-" + l.target] = true;
     adjacency[l.target + "-" + l.source] = true;
   });
 
-  const maxDegree = d3.max(graph.nodes, d => d.degree);
+  // --------------------------
+  // Scales
+  // --------------------------
+
+  const maxDegree = d3.max(graph.nodes, d => d.degree) || 1;
 
   const sizeScale = d3.scaleSqrt()
     .domain([0, maxDegree])
@@ -270,43 +291,66 @@ function drawGraph(graph) {
   const colorScale = d3.scaleSequential(d3.interpolateBlues)
     .domain([0, maxDegree]);
 
-  // Force simulation
+  // --------------------------
+  // Force Simulation
+  // --------------------------
+
   const simulation = d3.forceSimulation(graph.nodes)
     .force("link", d3.forceLink(graph.links)
       .id(d => d.id)
-      .distance(60))
-    .force("charge", d3.forceManyBody().strength(-200))
+      .distance(70))
+    .force("charge", d3.forceManyBody().strength(-250))
     .force("collision",
       d3.forceCollide().radius(d => sizeScale(d.degree) + 2))
     .force("center", d3.forceCenter(width / 2, height / 2));
 
-  // 🔥 STEP 4 — Store globally
+  // Store globally (important for sidebar resize)
   window.currentSimulation = simulation;
 
-  const link = container.selectAll("line")
+  // --------------------------
+  // Draw Links
+  // --------------------------
+
+  const link = container.append("g")
+    .selectAll("line")
     .data(graph.links)
     .enter()
-    .append("line");
+    .append("line")
+    .attr("stroke", "#444")
+    .attr("stroke-width", 1.5)
+    .attr("stroke-opacity", 0.9);
 
-  const node = container.selectAll("circle")
+  // --------------------------
+  // Draw Nodes
+  // --------------------------
+
+  const node = container.append("g")
+    .selectAll("circle")
     .data(graph.nodes)
     .enter()
     .append("circle")
     .attr("r", d => sizeScale(d.degree))
     .attr("fill", d => colorScale(d.degree))
+    .attr("stroke", "#333")
+    .attr("stroke-width", 1)
+    .style("cursor", "pointer")
+
+    // Tooltip
     .on("mouseover", (event, d) => {
-      d3.select("#tooltip")
+      tooltip
         .style("display", "block")
         .html(`Node: ${d.id}<br>Degree: ${d.degree}`);
     })
     .on("mousemove", (event) => {
-      d3.select("#tooltip")
-        .style("left", event.pageX + 10 + "px")
-        .style("top", event.pageY + 10 + "px");
+      tooltip
+        .style("left", (event.pageX + 10) + "px")
+        .style("top", (event.pageY + 10) + "px");
     })
     .on("mouseout", () => {
-      d3.select("#tooltip").style("display", "none");
+      tooltip.style("display", "none");
     })
+
+    // Neighbor highlight on click
     .on("click", (event, d) => {
 
       node.style("opacity", o =>
@@ -317,6 +361,8 @@ function drawGraph(graph) {
         o.source.id === d.id || o.target.id === d.id ? 1 : 0.1
       );
     })
+
+    // Dragging
     .call(d3.drag()
       .on("start", (event, d) => {
         if (!event.active) simulation.alphaTarget(0.3).restart();
@@ -333,6 +379,10 @@ function drawGraph(graph) {
         d.fy = null;
       })
     );
+
+  // --------------------------
+  // Simulation Tick
+  // --------------------------
 
   simulation.on("tick", () => {
 

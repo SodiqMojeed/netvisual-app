@@ -46,9 +46,10 @@ function loadGML(path) {
     drawGraph(graph);
     drawDegreePlots(graph);
 
-    // Load description
     d3.json("network-metadata.json").then(meta => {
+
       if (meta[fileName]) {
+
         document.getElementById("description").innerHTML = `
           <h3>Description & Citations</h3>
           <p><strong>Description:</strong><br>
@@ -56,7 +57,14 @@ function loadGML(path) {
           <p><strong>Citation:</strong><br>
           ${meta[fileName].citation}</p>
         `;
+
+      } else {
+        document.getElementById("description").innerHTML = `
+          <h3>Description & Citations</h3>
+          <p>No metadata found for ${fileName}</p>
+        `;
       }
+
     });
 
   });

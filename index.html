@@ -8,7 +8,7 @@
 <style>
 body {
   margin: 0;
-  font-family: Arial;
+  font-family: Arial, sans-serif;
   background: #f2f2f2;
   color: #222;
 }
@@ -17,7 +17,7 @@ body {
   padding: 10px;
   background: #e0e0e0;
   display: flex;
-  gap: 15px;
+  gap: 10px;
   align-items: center;
 }
 
@@ -27,9 +27,9 @@ body {
 }
 
 #graph {
-  flex: 4;  /* Increased width */
-  position: relative;
+  flex: 4;
   background: white;
+  position: relative;
 }
 
 #rightPanel {
@@ -52,7 +52,7 @@ body {
 }
 
 #propertiesPanel.open {
-  max-height: 300px;
+  max-height: 350px;
 }
 
 #plots {
@@ -68,7 +68,6 @@ body {
   flex: 1;
   padding: 15px;
   background: #fafafa;
-  font-size: 14px;
 }
 
 svg {
@@ -77,15 +76,15 @@ svg {
 }
 
 line {
-  stroke: #444;           /* Darker edges */
-  stroke-width: 1.5px;    /* Thicker edges */
-  stroke-opacity: 0.9;    /* Highly visible */
+  stroke: #444;
+  stroke-width: 1.5px;
+  stroke-opacity: 0.9;
 }
 
 circle {
   stroke: #333;
   stroke-width: 1px;
-  cursor: grab;
+  cursor: pointer;
 }
 
 .tooltip {
@@ -98,12 +97,36 @@ circle {
   pointer-events: none;
   display: none;
 }
+
+/* Table Styling */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 6px;
+  text-align: left;
+}
+
+th {
+  background: #eaeaea;
+}
+
+#tableTitle {
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
 </style>
 </head>
 
 <body>
 
 <div id="controls">
+  <label><strong>Network</strong></label>
   <select id="networkSelect"></select>
   <button id="loadBtn">Visualize</button>
   <button id="toggleProperties">Show Network Properties</button>
@@ -119,25 +142,18 @@ circle {
   <div id="rightPanel">
 
     <div id="propertiesPanel" class="panel">
-      <h3>Network Properties</h3>
+      <div id="tableTitle">Network Properties</div>
       <div id="propertiesContent"></div>
     </div>
 
     <div id="plots" class="panel">
-      <div id="histogram">
-        <svg id="histSVG"></svg>
-      </div>
-      <div id="loglog">
-        <svg id="logSVG"></svg>
-      </div>
+      <div id="histogram"><svg id="histSVG"></svg></div>
+      <div id="loglog"><svg id="logSVG"></svg></div>
     </div>
 
     <div id="description">
       <h3>Description & Citations</h3>
-      <p>
-        Replace this text with network description,
-        dataset source, methodology, and references.
-      </p>
+      Replace this text with dataset description and references.
     </div>
 
   </div>

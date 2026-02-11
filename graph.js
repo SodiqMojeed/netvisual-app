@@ -38,6 +38,8 @@ function loadGML(path) {
 
   const selectedFile = document.getElementById("networkSelect").value;
 
+  console.log("Selected file:", selectedFile);
+
   d3.text(path).then(text => {
 
     const graph = parseGML(text);
@@ -46,27 +48,41 @@ function loadGML(path) {
     drawGraph(graph);
     drawDegreePlots(graph);
 
-    // Load metadata
-    d3.json("network-metadata.json").then(meta => {
+    // FORCE metadata load
+    d3.json("network-metadata.json")
+      .then(meta => {
 
-      if (meta[selectedFile]) {
+        console.log("Metadata loaded:", meta);
 
-        document.getElementById("description").innerHTML = `
-          <h3>Description & Citations</h3>
-          <p><strong>Description:</strong><br>
-          ${meta[selectedFile].description}</p>
-          <p><strong>Citation:</strong><br>
-          ${meta[selectedFile].citation}</p>
-        `;
+        if (meta && meta[selectedFile]) {
 
-      } else {
+          const descHTML = `
+            <h3>Description & Citations</h3>
+            <p><strong>Description:</strong><br>
+            ${meta[selectedFile].description}</p>
+            <p><strong>Citation:</strong><br>
+            ${meta[selectedFile].citation}</p>
+          `;
 
-        document.getElementById("description").innerHTML = `
-          <h3>Description & Citations</h3>
-          <p>No metadata found for <strong>${selectedFile}</strong></p>
-        `;
+          document.getElementById("description").innerHTML = descHTML;
 
-      }
+        } else {
+
+          document.getElementById("description").innerHTML = `
+            <h3>Description & Citations</h3>
+            <p style="color:red;">
+            Metadata not found for: ${selectedFile}
+            </p>
+          `;
+        }
+
+      })
+      .catch(err => {
+        console.error("Metadata file failed:", err);
+      });
+
+  });
+}
 
     }).catch(err => {
       console.error("Metadata failed to load:", err);

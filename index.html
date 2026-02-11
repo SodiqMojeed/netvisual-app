@@ -11,8 +11,10 @@ body {
   font-family: Arial, sans-serif;
   background: #f2f2f2;
   color: #222;
+  overflow: hidden;
 }
 
+/* Top Controls */
 #controls {
   padding: 10px;
   background: #e0e0e0;
@@ -21,55 +23,59 @@ body {
   align-items: center;
 }
 
+/* Main Layout */
 #main {
   display: flex;
-  height: 92vh;
+  height: calc(100vh - 50px);
 }
 
-#graph {
-  flex: 4;
-  background: white;
-  position: relative;
+/* LEFT SIDEBAR */
+#sidebar {
+  width: 350px;
+  background: #ffffff;
+  border-right: 1px solid #ccc;
+  overflow-y: auto;
+  transition: width 0.3s ease;
 }
 
-#rightPanel {
-  flex: 2;
-  display: flex;
-  flex-direction: column;
-  border-left: 1px solid #ccc;
+#sidebar.collapsed {
+  width: 0;
+  overflow: hidden;
 }
 
-.panel {
-  background: white;
+#sidebarToggle {
+  cursor: pointer;
+}
+
+/* Collapsible Sections */
+.section {
   border-bottom: 1px solid #ccc;
+}
+
+.section-header {
+  padding: 10px;
+  background: #eaeaea;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.section-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  padding: 0 10px;
+}
+
+.section.open .section-content {
+  max-height: 800px;
   padding: 10px;
 }
 
-#propertiesPanel {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.4s ease;
-}
-
-#propertiesPanel.open {
-  max-height: 350px;
-}
-
-#plots {
-  display: flex;
-  flex: 2;
-}
-
-#histogram, #loglog {
+/* RIGHT GRAPH */
+#graphContainer {
   flex: 1;
-}
-
-#description {
-  flex: 1;
-  padding: 12px;
-  background: #fafafa;
-  font-size: 12px;
-  line-height: 1.4;
+  position: relative;
+  background: white;
 }
 
 svg {
@@ -89,37 +95,26 @@ circle {
   cursor: pointer;
 }
 
-.tooltip {
-  position: absolute;
-  background: white;
-  padding: 6px 10px;
-  border: 1px solid #aaa;
-  border-radius: 4px;
-  font-size: 12px;
-  pointer-events: none;
-  display: none;
-}
-
+/* Table Styling */
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 th, td {
   border: 1px solid #ccc;
   padding: 6px;
-  text-align: left;
 }
 
 th {
-  background: #eaeaea;
+  background: #f0f0f0;
+  text-align: left;
 }
 
-#tableTitle {
-  text-align: center;
-  font-weight: bold;
-  margin-bottom: 8px;
+#description {
+  font-size: 12px;
+  line-height: 1.4;
 }
 </style>
 </head>
@@ -127,36 +122,50 @@ th {
 <body>
 
 <div id="controls">
+  <button id="sidebarToggle">☰</button>
   <label><strong>Network</strong></label>
   <select id="networkSelect"></select>
   <button id="loadBtn">Visualize</button>
-  <button id="toggleProperties">Show Network Properties</button>
 </div>
 
 <div id="main">
 
-  <div id="graph">
-    <svg id="networkSVG"></svg>
-    <div id="tooltip" class="tooltip"></div>
+  <!-- LEFT SIDEBAR -->
+  <div id="sidebar">
+
+    <div class="section" id="propertiesSection">
+      <div class="section-header">Network Properties</div>
+      <div class="section-content">
+        <div id="propertiesContent"></div>
+      </div>
+    </div>
+
+    <div class="section" id="degreeSection">
+      <div class="section-header">Degree Distribution</div>
+      <div class="section-content">
+        <div style="height:250px;">
+          <svg id="histSVG"></svg>
+        </div>
+        <div style="height:250px;">
+          <svg id="logSVG"></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="descriptionSection">
+      <div class="section-header">Description & Citations</div>
+      <div class="section-content">
+        <div id="description">
+          Select a network and click Visualize.
+        </div>
+      </div>
+    </div>
+
   </div>
 
-  <div id="rightPanel">
-
-    <div id="propertiesPanel" class="panel">
-      <div id="tableTitle">Network Properties</div>
-      <div id="propertiesContent"></div>
-    </div>
-
-    <div id="plots" class="panel">
-      <div id="histogram"><svg id="histSVG"></svg></div>
-      <div id="loglog"><svg id="logSVG"></svg></div>
-    </div>
-
-    <div id="description">
-      <h3>Description & Citations</h3>
-      Select a network and click Visualize.
-    </div>
-
+  <!-- RIGHT GRAPH -->
+  <div id="graphContainer">
+    <svg id="networkSVG"></svg>
   </div>
 
 </div>

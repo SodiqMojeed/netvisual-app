@@ -47,6 +47,40 @@ document.querySelectorAll(".section-header")
   });
 
 // =============================
+// SIDEBAR RESIZE LOGIC
+// =============================
+
+const sidebar = document.getElementById("sidebar");
+const resizeHandle = document.getElementById("resizeHandle");
+
+let isResizing = false;
+
+resizeHandle.addEventListener("mousedown", () => {
+  isResizing = true;
+  document.body.style.cursor = "ew-resize";
+});
+
+document.addEventListener("mousemove", (event) => {
+  if (!isResizing) return;
+
+  const newWidth = event.clientX;
+
+  if (newWidth > 250 && newWidth < 800) {
+    sidebar.style.width = newWidth + "px";
+  }
+
+  // Restart simulation so graph recenters
+  if (window.currentSimulation) {
+    window.currentSimulation.alpha(0.1).restart();
+  }
+});
+
+document.addEventListener("mouseup", () => {
+  isResizing = false;
+  document.body.style.cursor = "default";
+});
+
+// =============================
 // LOAD DROPDOWN
 // =============================
 

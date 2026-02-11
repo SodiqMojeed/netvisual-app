@@ -11,6 +11,7 @@ svg.call(
   })
 );
 
+// Populate dropdown
 d3.json("networks.json").then(files => {
   d3.select("#networkSelect")
     .selectAll("option")
@@ -63,7 +64,9 @@ function parseGML(text) {
   return { nodes, links };
 }
 
+/* -------- Tabulated Properties -------- */
 function computeProperties(graph) {
+
   const n = graph.nodes.length;
   const m = graph.links.length;
 
@@ -75,22 +78,34 @@ function computeProperties(graph) {
   });
 
   const degrees = Object.values(degree);
-  const avgDegree = d3.mean(degrees);
-  const maxDegree = d3.max(degrees);
-  const minDegree = d3.min(degrees);
-  const density = (2 * m) / (n * (n - 1));
 
-  document.getElementById("propertiesContent").innerHTML = `
-    <strong>Nodes:</strong> ${n}<br>
-    <strong>Edges:</strong> ${m}<br>
-    <strong>Average Degree:</strong> ${avgDegree.toFixed(2)}<br>
-    <strong>Density:</strong> ${density.toFixed(4)}<br>
-    <strong>Max Degree:</strong> ${maxDegree}<br>
-    <strong>Min Degree:</strong> ${minDegree}
-  `;
+  const metrics = [
+    ["Nodes", n],
+    ["Edges", m],
+    ["Average Degree", d3.mean(degrees).toFixed(2)],
+    ["Density", ((2*m)/(n*(n-1))).toFixed(4)],
+    ["Max Degree", d3.max(degrees)],
+    ["Min Degree", d3.min(degrees)]
+  ];
+
+  let table = "<table>";
+  table += "<tr><th>#</th><th>Metric</th><th>Value</th></tr>";
+
+  metrics.forEach((row,i)=>{
+    table += `<tr>
+      <td>${i+1}</td>
+      <td title="Network metric">${row[0]}</td>
+      <td>${row[1]}</td>
+    </tr>`;
+  });
+
+  table += "</table>";
+
+  document.getElementById("propertiesContent").innerHTML = table;
 }
 
-function drawGraph(graph) {
+/* -------- Graph with Click Neighbors -------- */
+function drawGraph(graph){
 
   container.selectAll("*").remove();
 
@@ -98,30 +113,36 @@ function drawGraph(graph) {
   const height = document.getElementById("graph").clientHeight;
 
   const degree = {};
-  graph.nodes.forEach(n => degree[n.id] = 0);
-  graph.links.forEach(l => {
+  graph.nodes.forEach(n=>degree[n.id]=0);
+  graph.links.forEach(l=>{
     degree[l.source]++;
     degree[l.target]++;
   });
-  graph.nodes.forEach(n => n.degree = degree[n.id]);
+  graph.nodes.forEach(n=>n.degree=degree[n.id]);
 
-  const maxDegree = d3.max(graph.nodes, d => d.degree);
+  const adjacency = {};
+  graph.links.forEach(l=>{
+    adjacency[l.source+"-"+l.target]=true;
+    adjacency[l.target+"-"+l.source]=true;
+  });
+
+  const maxDegree = d3.max(graph.nodes,d=>d.degree);
 
   const sizeScale = d3.scaleSqrt()
-    .domain([0, maxDegree])
-    .range([4, 18]);
+    .domain([0,maxDegree])
+    .range([4,18]);
 
   const colorScale = d3.scaleSequential(d3.interpolateBlues)
-    .domain([0, maxDegree]);
+    .domain([0,maxDegree]);
 
   const simulation = d3.forceSimulation(graph.nodes)
     .force("link", d3.forceLink(graph.links)
-      .id(d => d.id)
+      .id(d=>d.id)
       .distance(60))
     .force("charge", d3.forceManyBody().strength(-200))
     .force("collision",
-      d3.forceCollide().radius(d => sizeScale(d.degree) + 2))
-    .force("center", d3.forceCenter(width / 2, height / 2));
+      d3.forceCollide().radius(d=>sizeScale(d.degree)+2))
+    .force("center", d3.forceCenter(width/2,height/2));
 
   const link = container.selectAll("line")
     .data(graph.links)
@@ -132,8 +153,26 @@ function drawGraph(graph) {
     .data(graph.nodes)
     .enter()
     .append("circle")
-    .attr("r", d => sizeScale(d.degree))
-    .attr("fill", d => colorScale(d.degree))
+    .attr("r",d=>sizeScale(d.degree))
+    .attr("fill",d=>colorScale(d.degree))
+    .on("mouseover",(event,d)=>{
+      tooltip.style("display","block")
+        .html(`Node: ${d.id}<br>Degree: ${d.degree}`);
+    })
+    .on("mousemove",(event)=>{
+      tooltip.style("left",event.pageX+10+"px")
+             .style("top",event.pageY+10+"px");
+    })
+    .on("mouseout",()=>{
+      tooltip.style("display","none");
+    })
+    .on("click",(event,d)=>{
+      node.style("opacity",o =>
+        adjacency[d.id+"-"+o.id] || d.id===o.id ? 1 : 0.1);
+
+      link.style("stroke-opacity",o =>
+        o.source.id===d.id || o.target.id===d.id ? 1 : 0.1);
+    })
     .call(d3.drag()
       .on("start",(event,d)=>{
         if(!event.active) simulation.alphaTarget(0.3).restart();
@@ -160,6 +199,7 @@ function drawGraph(graph) {
   });
 }
 
+/* -------- Python-style Plots -------- */
 function drawDegreePlots(graph){
 
   histSVG.selectAll("*").remove();
@@ -169,23 +209,32 @@ function drawDegreePlots(graph){
   const width = document.getElementById("histogram").clientWidth;
   const height = document.getElementById("histogram").clientHeight;
 
-  const bins = d3.bin()(degrees);
+  const margin = {top:30,right:20,bottom:40,left:50};
 
   const x = d3.scaleLinear()
     .domain([0,d3.max(degrees)])
-    .range([50,width-20]);
+    .range([margin.left,width-margin.right]);
+
+  const bins = d3.bin()(degrees);
 
   const y = d3.scaleLinear()
     .domain([0,d3.max(bins,d=>d.length)])
-    .range([height-40,20]);
+    .range([height-margin.bottom,margin.top]);
 
-  // Histogram Title
   histSVG.append("text")
-    .attr("x", width/2)
-    .attr("y", 15)
+    .attr("x",width/2)
+    .attr("y",20)
     .attr("text-anchor","middle")
     .attr("font-weight","bold")
     .text("Degree Distribution");
+
+  histSVG.append("g")
+    .attr("transform",`translate(0,${height-margin.bottom})`)
+    .call(d3.axisBottom(x));
+
+  histSVG.append("g")
+    .attr("transform",`translate(${margin.left},0)`)
+    .call(d3.axisLeft(y));
 
   histSVG.selectAll("rect")
     .data(bins)
@@ -194,64 +243,7 @@ function drawDegreePlots(graph){
     .attr("x",d=>x(d.x0))
     .attr("y",d=>y(d.length))
     .attr("width",d=>x(d.x1)-x(d.x0)-2)
-    .attr("height",d=>height-40-y(d.length))
+    .attr("height",d=>height-margin.bottom-y(d.length))
     .attr("fill","#4682b4");
 
-  // Axis labels
-  histSVG.append("text")
-    .attr("x", width/2)
-    .attr("y", height-5)
-    .attr("text-anchor","middle")
-    .text("Degree");
-
-  histSVG.append("text")
-    .attr("transform","rotate(-90)")
-    .attr("x",-height/2)
-    .attr("y",15)
-    .attr("text-anchor","middle")
-    .text("Frequency");
-
-  // Log-Log Plot
-  const freq = {};
-  degrees.forEach(k=>freq[k]=(freq[k]||0)+1);
-
-  const data = Object.entries(freq)
-    .map(([k,v])=>({k:+k,v}));
-
-  const logX = d3.scaleLog()
-    .domain([1,d3.max(data,d=>d.k)])
-    .range([50,width-20]);
-
-  const logY = d3.scaleLog()
-    .domain([1,d3.max(data,d=>d.v)])
-    .range([height-40,20]);
-
-  logSVG.append("text")
-    .attr("x", width/2)
-    .attr("y", 15)
-    .attr("text-anchor","middle")
-    .attr("font-weight","bold")
-    .text("Log-Log Degree Plot");
-
-  logSVG.selectAll("circle")
-    .data(data)
-    .enter()
-    .append("circle")
-    .attr("cx",d=>logX(d.k))
-    .attr("cy",d=>logY(d.v))
-    .attr("r",3)
-    .attr("fill","black");
-
-  logSVG.append("text")
-    .attr("x", width/2)
-    .attr("y", height-5)
-    .attr("text-anchor","middle")
-    .text("Degree (log)");
-
-  logSVG.append("text")
-    .attr("transform","rotate(-90)")
-    .attr("x",-height/2)
-    .attr("y",15)
-    .attr("text-anchor","middle")
-    .text("Frequency (log)");
 }

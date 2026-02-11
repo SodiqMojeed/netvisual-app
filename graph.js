@@ -9,18 +9,26 @@ const tooltip = d3.select("#tooltip");
 
 const container = svg.append("g");
 
-// Sidebar Toggle
+// Sidebar horizontal toggle
 document.getElementById("sidebarToggle")
   .addEventListener("click", () => {
     document.getElementById("sidebar")
       .classList.toggle("collapsed");
+
+    // Recenter graph after layout change
+    setTimeout(() => {
+      if (window.currentSimulation) {
+        window.currentSimulation.alpha(0.5).restart();
+      }
+    }, 300);
   });
 
-// Section Toggle
+// Vertical section toggle
 document.querySelectorAll(".section-header")
   .forEach(header => {
     header.addEventListener("click", () => {
-      header.parentElement.classList.toggle("open");
+      const section = header.parentElement;
+      section.classList.toggle("open");
     });
   });
 

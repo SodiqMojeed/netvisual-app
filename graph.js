@@ -11,7 +11,6 @@ svg.call(
   })
 );
 
-// Populate dropdown
 d3.json("networks.json").then(files => {
   d3.select("#networkSelect")
     .selectAll("option")
@@ -64,11 +63,7 @@ function parseGML(text) {
   return { nodes, links };
 }
 
-// ------------------
-// Compute Properties
-// ------------------
 function computeProperties(graph) {
-
   const n = graph.nodes.length;
   const m = graph.links.length;
 
@@ -83,7 +78,6 @@ function computeProperties(graph) {
   const avgDegree = d3.mean(degrees);
   const maxDegree = d3.max(degrees);
   const minDegree = d3.min(degrees);
-
   const density = (2 * m) / (n * (n - 1));
 
   document.getElementById("propertiesContent").innerHTML = `
@@ -96,9 +90,6 @@ function computeProperties(graph) {
   `;
 }
 
-// ------------------
-// Draw Graph
-// ------------------
 function drawGraph(graph) {
 
   container.selectAll("*").remove();
@@ -143,17 +134,6 @@ function drawGraph(graph) {
     .append("circle")
     .attr("r", d => sizeScale(d.degree))
     .attr("fill", d => colorScale(d.degree))
-    .on("mouseover", (event, d) => {
-      tooltip.style("display","block")
-        .html(`Node: ${d.id}<br>Degree: ${d.degree}`);
-    })
-    .on("mousemove", (event) => {
-      tooltip.style("left", event.pageX+10+"px")
-             .style("top", event.pageY+10+"px");
-    })
-    .on("mouseout", () => {
-      tooltip.style("display","none");
-    })
     .call(d3.drag()
       .on("start",(event,d)=>{
         if(!event.active) simulation.alphaTarget(0.3).restart();
@@ -180,16 +160,12 @@ function drawGraph(graph) {
   });
 }
 
-// ------------------
-// Degree Plots
-// ------------------
 function drawDegreePlots(graph){
 
   histSVG.selectAll("*").remove();
   logSVG.selectAll("*").remove();
 
   const degrees = graph.nodes.map(d=>d.degree);
-
   const width = document.getElementById("histogram").clientWidth;
   const height = document.getElementById("histogram").clientHeight;
 
@@ -197,11 +173,19 @@ function drawDegreePlots(graph){
 
   const x = d3.scaleLinear()
     .domain([0,d3.max(degrees)])
-    .range([30,width-10]);
+    .range([50,width-20]);
 
   const y = d3.scaleLinear()
     .domain([0,d3.max(bins,d=>d.length)])
-    .range([height-30,10]);
+    .range([height-40,20]);
+
+  // Histogram Title
+  histSVG.append("text")
+    .attr("x", width/2)
+    .attr("y", 15)
+    .attr("text-anchor","middle")
+    .attr("font-weight","bold")
+    .text("Degree Distribution");
 
   histSVG.selectAll("rect")
     .data(bins)
@@ -210,25 +194,44 @@ function drawDegreePlots(graph){
     .attr("x",d=>x(d.x0))
     .attr("y",d=>y(d.length))
     .attr("width",d=>x(d.x1)-x(d.x0)-2)
-    .attr("height",d=>height-30-y(d.length))
+    .attr("height",d=>height-40-y(d.length))
     .attr("fill","#4682b4");
 
-  // Log-log plot
+  // Axis labels
+  histSVG.append("text")
+    .attr("x", width/2)
+    .attr("y", height-5)
+    .attr("text-anchor","middle")
+    .text("Degree");
+
+  histSVG.append("text")
+    .attr("transform","rotate(-90)")
+    .attr("x",-height/2)
+    .attr("y",15)
+    .attr("text-anchor","middle")
+    .text("Frequency");
+
+  // Log-Log Plot
   const freq = {};
-  degrees.forEach(k=>{
-    freq[k]=(freq[k]||0)+1;
-  });
+  degrees.forEach(k=>freq[k]=(freq[k]||0)+1);
 
   const data = Object.entries(freq)
     .map(([k,v])=>({k:+k,v}));
 
   const logX = d3.scaleLog()
     .domain([1,d3.max(data,d=>d.k)])
-    .range([30,width-10]);
+    .range([50,width-20]);
 
   const logY = d3.scaleLog()
     .domain([1,d3.max(data,d=>d.v)])
-    .range([height-30,10]);
+    .range([height-40,20]);
+
+  logSVG.append("text")
+    .attr("x", width/2)
+    .attr("y", 15)
+    .attr("text-anchor","middle")
+    .attr("font-weight","bold")
+    .text("Log-Log Degree Plot");
 
   logSVG.selectAll("circle")
     .data(data)
@@ -238,4 +241,17 @@ function drawDegreePlots(graph){
     .attr("cy",d=>logY(d.v))
     .attr("r",3)
     .attr("fill","black");
+
+  logSVG.append("text")
+    .attr("x", width/2)
+    .attr("y", height-5)
+    .attr("text-anchor","middle")
+    .text("Degree (log)");
+
+  logSVG.append("text")
+    .attr("transform","rotate(-90)")
+    .attr("x",-height/2)
+    .attr("y",15)
+    .attr("text-anchor","middle")
+    .text("Frequency (log)");
 }

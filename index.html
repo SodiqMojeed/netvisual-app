@@ -6,53 +6,89 @@
 <script src="https://d3js.org/d3.v7.min.js"></script>
 
 <style>
-body { margin:0; font-family:Arial; background:#111; color:white; }
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #f2f2f2;
+  color: #222;
+}
 
 #controls {
-  padding:10px;
-  background:#222;
-  display:flex;
-  gap:10px;
-  align-items:center;
+  padding: 10px;
+  background: #e0e0e0;
+  display: flex;
+  gap: 15px;
+  align-items: center;
 }
 
 #main {
-  display:flex;
-  height:90vh;
+  display: flex;
+  height: 92vh;
 }
 
 #graph {
-  flex:3;
+  flex: 3;
+  position: relative;
+  background: white;
 }
 
-#degreePanel {
-  flex:1;
-  background:#181818;
-  border-left:1px solid #333;
+#rightPanel {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid #ccc;
 }
 
-svg { width:100%; height:100%; }
-
-circle {
-  stroke:#111;
-  stroke-width:1px;
-  cursor:grab;
+.panel {
+  background: white;
+  border-bottom: 1px solid #ccc;
+  padding: 10px;
 }
 
-line {
-  stroke:#aaa;
-  stroke-opacity:0.2;
+#propertiesPanel {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+}
+
+#propertiesPanel.open {
+  max-height: 250px;
+}
+
+#plots {
+  display: flex;
+  flex: 2;
+}
+
+#histogram, #loglog {
+  flex: 1;
+}
+
+#description {
+  flex: 1;
+  padding: 15px;
+  background: #fafafa;
+  font-size: 14px;
+}
+
+svg {
+  width: 100%;
+  height: 100%;
+}
+
+button {
+  cursor: pointer;
 }
 
 .tooltip {
-  position:absolute;
-  background:#222;
-  padding:5px 8px;
-  border:1px solid #555;
-  border-radius:4px;
-  font-size:12px;
-  pointer-events:none;
-  color:white;
+  position: absolute;
+  background: white;
+  padding: 6px 10px;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  font-size: 12px;
+  pointer-events: none;
+  display: none;
 }
 </style>
 </head>
@@ -62,19 +98,48 @@ line {
 <div id="controls">
   <select id="networkSelect"></select>
   <button id="loadBtn">Visualize</button>
-
   <label>
-    <input type="checkbox" id="logScaleToggle">
+    <input type="checkbox" id="logToggle">
     Log Degree Scaling
   </label>
+  <button id="toggleProperties">Toggle Properties</button>
 </div>
 
 <div id="main">
-  <div id="graph"><svg></svg></div>
-  <div id="degreePanel"><svg id="degreeSVG"></svg></div>
-</div>
 
-<div class="tooltip" id="tooltip" style="display:none;"></div>
+  <div id="graph">
+    <svg id="networkSVG"></svg>
+    <div id="tooltip" class="tooltip"></div>
+  </div>
+
+  <div id="rightPanel">
+
+    <div id="propertiesPanel" class="panel">
+      <h3>Network Properties</h3>
+      <div id="propertiesContent"></div>
+    </div>
+
+    <div id="plots" class="panel">
+      <div id="histogram">
+        <svg id="histSVG"></svg>
+      </div>
+      <div id="loglog">
+        <svg id="logSVG"></svg>
+      </div>
+    </div>
+
+    <div id="description">
+      <h3>Description & Citations</h3>
+      <p>
+        Sample description text. Replace this with
+        information about the selected network, its
+        origin, references, and citations.
+      </p>
+    </div>
+
+  </div>
+
+</div>
 
 <script src="graph.js"></script>
 </body>

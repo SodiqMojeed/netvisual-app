@@ -17,6 +17,24 @@ body {
 }
 
 /* =======================
+   RESIZE HANDLE
+======================= */
+
+#resizeHandle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 100%;
+  cursor: ew-resize;
+  background: transparent;
+}
+
+#resizeHandle:hover {
+  background: #ddd;
+}
+
+/* =======================
    TOP CONTROLS
 ======================= */
 #controls {
@@ -46,10 +64,13 @@ body {
 ======================= */
 #sidebar {
   width: 360px;
+  min-width: 250px;
+  max-width: 800px;
+  position: relative;   /* add this */
   background: #ffffff;
   border-right: 1px solid #ccc;
   overflow-y: auto;
-  transition: width 0.3s ease;
+  transition: width 0.2s ease;
 }
 
 #sidebar.collapsed {
@@ -166,6 +187,7 @@ th {
 
   <!-- LEFT SIDEBAR -->
   <div id="sidebar">
+     <div id="resizeHandle"></div>
 
     <!-- Network Properties -->
     <div class="section" id="propertiesSection">

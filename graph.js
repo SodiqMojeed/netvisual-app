@@ -410,7 +410,8 @@ function drawDegreePlots(graph){
     .attr("y", 20)
     .attr("text-anchor", "middle")
     .attr("font-weight", "bold")
-    .text("Degree Distribution (Histogram)");
+    .attr("font-size", "12px")
+    .text("Degree Distribution");
 
   histSVG.append("g")
     .attr("transform",`translate(0,${height1-margin.bottom})`)
@@ -429,6 +430,23 @@ function drawDegreePlots(graph){
     .attr("width",d=>x1(d.x1)-x1(d.x0)-2)
     .attr("height",d=>height1-margin.bottom-y1(d.length))
     .attr("fill","#4682b4");
+
+  // X-axis label
+  histSVG.append("text")
+    .attr("x", width1 / 2)
+    .attr("y", height1 - 10)
+    .attr("text-anchor", "middle")
+    .attr("font-size", "12px")
+    .text("Degree (k)");
+
+  // Y-axis label
+  histSVG.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("x", -height1 / 2)
+    .attr("y", 20)
+    .attr("text-anchor", "middle")
+    .attr("font-size", "12px")
+    .text("Frequency");
 
 
   // =====================================
@@ -465,7 +483,8 @@ function drawDegreePlots(graph){
     .attr("y", 20)
     .attr("text-anchor", "middle")
     .attr("font-weight", "bold")
-    .text("Log-Log Degree Distribution with Power-Law Fit");
+    .attr("font-size", "12px")
+    .text("Degree Distribution on a Log-Log Scale");
 
   logSVG.append("g")
     .attr("transform",`translate(0,${height2-margin.bottom})`)
@@ -523,4 +542,25 @@ function drawDegreePlots(graph){
     .attr("fill","red")
     .attr("font-size","12px")
     .text(`γ ≈ ${gamma.toFixed(2)}`);
+
+  // ==========================
+  // AXIS LABELS (LOG-LOG)
+  // ==========================
+
+  // X-axis label
+  logSVG.append("text")
+    .attr("x", width2 / 2)
+    .attr("y", height2 - 8)
+    .attr("text-anchor", "middle")
+    .attr("font-size", "12px")
+    .text("log₁₀(k)");
+
+  // Y-axis label
+  logSVG.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("x", -height2 / 2)
+    .attr("y", 18)
+    .attr("text-anchor", "middle")
+    .attr("font-size", "12px")
+    .text("log₁₀(P(k))");
 }

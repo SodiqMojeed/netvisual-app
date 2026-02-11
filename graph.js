@@ -35,11 +35,30 @@ document.getElementById("toggleProperties")
   });
 
 function loadGML(path) {
+
+  const fileName = path.split("/").pop();
+
   d3.text(path).then(text => {
+
     const graph = parseGML(text);
+
     computeProperties(graph);
     drawGraph(graph);
     drawDegreePlots(graph);
+
+    // Load description
+    d3.json("network-metadata.json").then(meta => {
+      if (meta[fileName]) {
+        document.getElementById("description").innerHTML = `
+          <h3>Description & Citations</h3>
+          <p><strong>Description:</strong><br>
+          ${meta[fileName].description}</p>
+          <p><strong>Citation:</strong><br>
+          ${meta[fileName].citation}</p>
+        `;
+      }
+    });
+
   });
 }
 

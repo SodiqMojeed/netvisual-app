@@ -16,7 +16,7 @@
     "citation": "M. E. J. Newman, Finding community structure in networks using the eigenvectors of matrices, Preprint physics/0605087 (2006)."
   },
   "polbooks.gml": {
-    "description": "Books about US Politics compiled by Valdis Krebs. Nodes represent books about US politics sold by the online bookseller Amazon.com.  Edges represent frequent co-purchasing of books by the same buyers, as indicated by the "customers who bought this book also bought these other books" feature on Amazon. Nodes have been given values "l", "n", or "c" to indicate whether they are "liberal", "neutral", or "conservative".  These alignments were assigned separately by Mark Newman based on a reading of the descriptions and reviews of the books posted on Amazon.",
+    "description": "Books about US Politics compiled by Valdis Krebs. Nodes represent books about US politics sold by the online bookseller Amazon.com.  Edges represent frequent co-purchasing of books by the same buyers, as indicated by the 'customers who bought this book also bought these other books' feature on Amazon. Nodes have been given values 'l', 'n', or 'c' to indicate whether they are 'liberal', 'neutral', or 'conservative'.  These alignments were assigned separately by Mark Newman based on a reading of the descriptions and reviews of the books posted on Amazon.",
     "citation": "V. Krebs, unpublished, http://www.orgnet.com/."
   }
 }

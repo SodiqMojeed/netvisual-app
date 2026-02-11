@@ -23,15 +23,16 @@ body {
 #resizeHandle {
   position: absolute;
   top: 0;
-  right: 0;
+  right: -3px;              /* overlap slightly into graph */
   width: 6px;
   height: 100%;
   cursor: ew-resize;
-  background: transparent;
+  background: linear-gradient(to right, #ccc, #eee);
+  z-index: 10;
 }
 
 #resizeHandle:hover {
-  background: #ddd;
+  background: #999;
 }
 
 /* =======================
@@ -66,9 +67,8 @@ body {
   width: 360px;
   min-width: 250px;
   max-width: 800px;
-  position: relative;   /* add this */
+  position: relative;
   background: #ffffff;
-  border-right: 1px solid #ccc;
   overflow-y: auto;
   transition: width 0.2s ease;
 }

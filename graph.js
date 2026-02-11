@@ -36,7 +36,7 @@ document.getElementById("toggleProperties")
 
 function loadGML(path) {
 
-  const fileName = path.split("/").pop();
+  const selectedFile = document.getElementById("networkSelect").value;
 
   d3.text(path).then(text => {
 
@@ -46,25 +46,30 @@ function loadGML(path) {
     drawGraph(graph);
     drawDegreePlots(graph);
 
+    // Load metadata
     d3.json("network-metadata.json").then(meta => {
 
-      if (meta[fileName]) {
+      if (meta[selectedFile]) {
 
         document.getElementById("description").innerHTML = `
           <h3>Description & Citations</h3>
           <p><strong>Description:</strong><br>
-          ${meta[fileName].description}</p>
+          ${meta[selectedFile].description}</p>
           <p><strong>Citation:</strong><br>
-          ${meta[fileName].citation}</p>
+          ${meta[selectedFile].citation}</p>
         `;
 
       } else {
+
         document.getElementById("description").innerHTML = `
           <h3>Description & Citations</h3>
-          <p>No metadata found for ${fileName}</p>
+          <p>No metadata found for <strong>${selectedFile}</strong></p>
         `;
+
       }
 
+    }).catch(err => {
+      console.error("Metadata failed to load:", err);
     });
 
   });

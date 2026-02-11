@@ -8,11 +8,11 @@
     "citation": "Barabási, A.-L. & Albert, R. (1999). Emergence of scaling in random networks."
   },
   "lesmis.gml": {
-    "description": "The Lesmis network is a weighted network of character co-appearances in Victor Hugo's novel "Les Misérables".  Nodes represent characters as indicated by the labels, and edges connect any pair of characters that appear in the same chapter of the book.  The values on the edges are the number of such coappearances.",
+    "description": "The Lesmis network is a weighted network of character co-appearances in Victor Hugo's novel 'Les Misérables'.  Nodes represent characters as indicated by the labels, and edges connect any pair of characters that appear in the same chapter of the book.  The values on the edges are the number of such coappearances.",
     "citation": "D. E. Knuth, The Stanford GraphBase: A Platform for Combinatorial Computing, Addison-Wesley, Reading, MA (1993)."
   },
   "adjnoun.gml": {
-    "description": "The Adjnoun network is the network of common adjective and noun adjacencies for the novel "David Copperfield" by Charles Dickens, as described by M. Newman.  Nodes represent the most commonly occurring adjectives and nouns in the book.  Node values are 0 for adjectives and 1 for nouns.  Edges connect any pair of words that occur in adjacent positions in the text of the book.",
+    "description": "The Adjnoun network is the network of common adjective and noun adjacencies for the novel 'David Copperfield' by Charles Dickens, as described by M. Newman.  Nodes represent the most commonly occurring adjectives and nouns in the book.  Node values are 0 for adjectives and 1 for nouns.  Edges connect any pair of words that occur in adjacent positions in the text of the book.",
     "citation": "M. E. J. Newman, Finding community structure in networks using the eigenvectors of matrices, Preprint physics/0605087 (2006)."
   },
   "polbooks.gml": {

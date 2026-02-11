@@ -6,32 +6,46 @@
 <script src="https://d3js.org/d3.v7.min.js"></script>
 
 <style>
+/* =======================
+   GLOBAL
+======================= */
 body {
   margin: 0;
   font-family: Arial, sans-serif;
   background: #f2f2f2;
   color: #222;
-  overflow: hidden;
 }
 
-/* Top Controls */
+/* =======================
+   TOP CONTROLS
+======================= */
 #controls {
+  height: 50px;
   padding: 10px;
   background: #e0e0e0;
   display: flex;
-  gap: 10px;
   align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
 }
 
-/* Main Layout */
+#sidebarToggle {
+  cursor: pointer;
+}
+
+/* =======================
+   MAIN LAYOUT
+======================= */
 #main {
   display: flex;
   height: calc(100vh - 50px);
 }
 
-/* LEFT SIDEBAR */
+/* =======================
+   LEFT SIDEBAR
+======================= */
 #sidebar {
-  width: 350px;
+  width: 360px;
   background: #ffffff;
   border-right: 1px solid #ccc;
   overflow-y: auto;
@@ -43,46 +57,55 @@ body {
   overflow: hidden;
 }
 
-#sidebarToggle {
-  cursor: pointer;
-}
-
-/* Collapsible Sections */
+/* Vertical collapsible sections */
 .section {
   border-bottom: 1px solid #ccc;
 }
 
 .section-header {
-  padding: 10px;
+  padding: 12px;
   background: #eaeaea;
-  cursor: pointer;
   font-weight: bold;
+  cursor: pointer;
 }
 
 .section-content {
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.3s ease;
-  padding: 0 10px;
+  padding: 0 12px;
 }
 
 .section.open .section-content {
-  max-height: 800px;
-  padding: 10px;
+  max-height: 1200px;
+  padding: 12px;
 }
 
-/* RIGHT GRAPH */
+/* =======================
+   RIGHT GRAPH PANEL
+======================= */
 #graphContainer {
   flex: 1;
+  background: #ffffff;
   position: relative;
-  background: white;
 }
 
-svg {
+/* Graph SVG fills right panel */
+#networkSVG {
   width: 100%;
   height: 100%;
 }
 
+/* Sidebar plots have fixed height */
+#histSVG,
+#logSVG {
+  width: 100%;
+  height: 250px;
+}
+
+/* =======================
+   GRAPH STYLING
+======================= */
 line {
   stroke: #444;
   stroke-width: 1.5px;
@@ -95,7 +118,9 @@ circle {
   cursor: pointer;
 }
 
-/* Table Styling */
+/* =======================
+   TABLE
+======================= */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -112,27 +137,37 @@ th {
   text-align: left;
 }
 
+/* =======================
+   DESCRIPTION
+======================= */
 #description {
   font-size: 12px;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 </style>
 </head>
 
 <body>
 
+<!-- =======================
+     CONTROLS
+======================= -->
 <div id="controls">
   <button id="sidebarToggle">☰</button>
-  <label><strong>Network</strong></label>
+  <strong>Network</strong>
   <select id="networkSelect"></select>
   <button id="loadBtn">Visualize</button>
 </div>
 
+<!-- =======================
+     MAIN LAYOUT
+======================= -->
 <div id="main">
 
   <!-- LEFT SIDEBAR -->
   <div id="sidebar">
 
+    <!-- Network Properties -->
     <div class="section" id="propertiesSection">
       <div class="section-header">Network Properties</div>
       <div class="section-content">
@@ -140,18 +175,16 @@ th {
       </div>
     </div>
 
+    <!-- Degree Distribution -->
     <div class="section" id="degreeSection">
       <div class="section-header">Degree Distribution</div>
       <div class="section-content">
-        <div style="height:250px;">
-          <svg id="histSVG" height="250"></svg>
-        </div>
-        <div style="height:250px;">
-          <svg id="logSVG" height="250"></svg>
-        </div>
+        <svg id="histSVG"></svg>
+        <svg id="logSVG"></svg>
       </div>
     </div>
 
+    <!-- Description -->
     <div class="section" id="descriptionSection">
       <div class="section-header">Description & Citations</div>
       <div class="section-content">
@@ -171,5 +204,6 @@ th {
 </div>
 
 <script src="graph.js"></script>
+
 </body>
 </html>

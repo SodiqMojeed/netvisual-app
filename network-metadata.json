@@ -19,6 +19,10 @@
     "description": "The Words Adjacency Network is the network of common adjective-noun adjacencies for the novel ‘David Copperfield’ by Charles Dickens, as described by M. Newman.  Nodes represent the most commonly occurring adjectives and nouns in the book.  Node values are 0 for adjectives and 1 for nouns.  Edges connect any pair of words that occur in adjacent positions in the text of the book.",
     "citation": "M. E. J. Newman, Finding community structure in networks using the eigenvectors of matrices, Preprint physics/0605087 (2006)."
   },
+  "football.gml": {
+    "description": "The football network contains the network of American football games between Division IA colleges during the regular season, Fall 2000, as compiled by M. Girvan and M. Newman.  The nodes have values indicating which conferences they belong to.  The values are as follows: Atlantic Coast (0), Big East (1), Big Ten (2), Big Twelve (3), Conference USA (4), Independents (5), Mid-American (6), Mountain West (7), Pacific Ten (8), Southeastern (9), Sun Belt (10), and Western Athletic (11).",
+    "citation": "M. Girvan and M. E. J. Newman, Community structure in social and biological networks, Proc. Natl. Acad. Sci. USA 99, 7821-7826 (2002)."
+  },
   "netscience.gml": {
     "description": "This is a coauthorship network of scientists working on network theory and experiment, as compiled by M. Newman in May 2006.  The network was compiled from the bibliographies of two review articles on networks. The version presented here includes all network components, totaling 1589 scientists, rather than the previously published largest component of 379 scientists.  The network is weighted, with weights assigned as described in M. E. J. Newman, Phys. Rev. E 64, 016132 (2001).",
     "citation": "M. E. J. Newman, Finding community structure in networks using the eigenvectors of matrices, Preprint physics/0605087 (2006)."

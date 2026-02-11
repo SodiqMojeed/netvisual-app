@@ -60,32 +60,58 @@ document.getElementById("toggleProperties")
 
 function loadGML(path, fileName) {
 
-  console.log("Loading:", path);
-
   d3.text(path)
     .then(text => {
 
-      if (!text || text.trim().length === 0) {
-        console.warn("Empty GML file.");
-        return;
-      }
-
       const graph = parseGML(text);
-
-      if (graph.nodes.length === 0) {
-        console.warn("Parsed graph has 0 nodes.");
-        return;
-      }
 
       computeProperties(graph);
       drawGraph(graph);
       drawDegreePlots(graph);
+
+      // THIS LINE MUST EXIST
       loadMetadata(fileName);
 
     })
     .catch(err => {
-      console.error("GML load error:", err);
-      // ❌ No alert anymore
+      console.error("Failed to load GML:", err);
+    });
+}
+
+// ============================
+// Load Metadata
+// ============================
+
+function loadMetadata(fileName) {
+
+  console.log("Loading metadata for:", fileName);
+
+  d3.json("network-metadata.json")
+    .then(meta => {
+
+      console.log("Metadata object:", meta);
+
+      if (meta[fileName]) {
+
+        document.getElementById("description").innerHTML = `
+          <h3>Description & Citations</h3>
+          <p><strong>Description:</strong><br>
+          ${meta[fileName].description}</p>
+          <p><strong>Citation:</strong><br>
+          ${meta[fileName].citation}</p>
+        `;
+
+      } else {
+
+        document.getElementById("description").innerHTML = `
+          <h3>Description & Citations</h3>
+          <p style="color:red;">No metadata found for ${fileName}</p>
+        `;
+      }
+
+    })
+    .catch(err => {
+      console.error("Metadata failed to load:", err);
     });
 }
 

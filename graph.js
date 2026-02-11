@@ -1,9 +1,7 @@
-const svg = d3.select("#graph svg");
-const degreeSVG = d3.select("#degreeSVG");
+const svg = d3.select("#networkSVG");
+const histSVG = d3.select("#histSVG");
+const logSVG = d3.select("#logSVG");
 const tooltip = d3.select("#tooltip");
-
-const width = document.getElementById("graph").clientWidth;
-const height = document.getElementById("graph").clientHeight;
 
 const container = svg.append("g");
 
@@ -27,197 +25,217 @@ d3.json("networks.json").then(files => {
 document.getElementById("loadBtn")
   .addEventListener("click", () => {
     const file = document.getElementById("networkSelect").value;
-    loadGML(`networks/${file}`);
+    loadGML("networks/" + file);
+  });
+
+document.getElementById("toggleProperties")
+  .addEventListener("click", () => {
+    document.getElementById("propertiesPanel")
+      .classList.toggle("open");
   });
 
 function loadGML(path) {
   d3.text(path).then(text => {
     const graph = parseGML(text);
+    computeProperties(graph);
     drawGraph(graph);
-    drawDegreeDistribution(graph);
+    drawDegreePlots(graph);
   });
 }
 
-// Simple GML parser
 function parseGML(text) {
   const nodes = [];
   const links = [];
 
-  const nodeRegex = /node\s*\[(.*?)\]/gs;
-  const edgeRegex = /edge\s*\[(.*?)\]/gs;
+  const nodeBlocks = text.match(/node\s*\[[^\]]*\]/g) || [];
+  const edgeBlocks = text.match(/edge\s*\[[^\]]*\]/g) || [];
 
-  let match;
+  nodeBlocks.forEach(block => {
+    const id = block.match(/id\s+(\d+)/);
+    if (id) nodes.push({ id: id[1] });
+  });
 
-  while ((match = nodeRegex.exec(text)) !== null) {
-    const idMatch = /id\s+(\d+)/.exec(match[1]);
-    if (idMatch) nodes.push({ id: idMatch[1] });
-  }
-
-  while ((match = edgeRegex.exec(text)) !== null) {
-    const sourceMatch = /source\s+(\d+)/.exec(match[1]);
-    const targetMatch = /target\s+(\d+)/.exec(match[1]);
-    if (sourceMatch && targetMatch) {
-      links.push({
-        source: sourceMatch[1],
-        target: targetMatch[1]
-      });
-    }
-  }
+  edgeBlocks.forEach(block => {
+    const s = block.match(/source\s+(\d+)/);
+    const t = block.match(/target\s+(\d+)/);
+    if (s && t) links.push({ source: s[1], target: t[1] });
+  });
 
   return { nodes, links };
 }
 
-function drawGraph(graph) {
+// ------------------
+// Compute Properties
+// ------------------
+function computeProperties(graph) {
 
-  container.selectAll("*").remove();
+  const n = graph.nodes.length;
+  const m = graph.links.length;
 
-  // Compute degrees
   const degree = {};
   graph.nodes.forEach(n => degree[n.id] = 0);
-
   graph.links.forEach(l => {
     degree[l.source]++;
     degree[l.target]++;
   });
 
+  const degrees = Object.values(degree);
+  const avgDegree = d3.mean(degrees);
+  const maxDegree = d3.max(degrees);
+  const minDegree = d3.min(degrees);
+
+  const density = (2 * m) / (n * (n - 1));
+
+  document.getElementById("propertiesContent").innerHTML = `
+    <strong>Nodes:</strong> ${n}<br>
+    <strong>Edges:</strong> ${m}<br>
+    <strong>Average Degree:</strong> ${avgDegree.toFixed(2)}<br>
+    <strong>Density:</strong> ${density.toFixed(4)}<br>
+    <strong>Max Degree:</strong> ${maxDegree}<br>
+    <strong>Min Degree:</strong> ${minDegree}
+  `;
+}
+
+// ------------------
+// Draw Graph
+// ------------------
+function drawGraph(graph) {
+
+  container.selectAll("*").remove();
+
+  const width = document.getElementById("graph").clientWidth;
+  const height = document.getElementById("graph").clientHeight;
+
+  const degree = {};
+  graph.nodes.forEach(n => degree[n.id] = 0);
+  graph.links.forEach(l => {
+    degree[l.source]++;
+    degree[l.target]++;
+  });
   graph.nodes.forEach(n => n.degree = degree[n.id]);
 
   const maxDegree = d3.max(graph.nodes, d => d.degree);
 
-  const logScale = document.getElementById("logScaleToggle").checked;
-
-  const degreeTransform = d =>
-    logScale ? Math.log(d.degree + 1) : d.degree;
-
-  const maxTransformed =
-    d3.max(graph.nodes, d => degreeTransform(d));
-
   const sizeScale = d3.scaleSqrt()
-    .domain([0, maxTransformed])
-    .range([4, 22]);
+    .domain([0, maxDegree])
+    .range([4, 18]);
 
-  const colorScale = d3.scaleSequential(d3.interpolatePlasma)
-    .domain([0, maxTransformed]);
-
-  const adjacency = {};
-  graph.links.forEach(l => {
-    adjacency[`${l.source}-${l.target}`] = true;
-    adjacency[`${l.target}-${l.source}`] = true;
-  });
-
-  function isNeighbor(a, b) {
-    return adjacency[`${a.id}-${b.id}`] || a.id === b.id;
-  }
+  const colorScale = d3.scaleSequential(d3.interpolateBlues)
+    .domain([0, maxDegree]);
 
   const simulation = d3.forceSimulation(graph.nodes)
     .force("link", d3.forceLink(graph.links)
-        .id(d => d.id)
-        .distance(graph.nodes.length < 50 ? 120 : 60))
+      .id(d => d.id)
+      .distance(60))
     .force("charge", d3.forceManyBody().strength(-200))
     .force("collision",
-        d3.forceCollide().radius(d =>
-          sizeScale(degreeTransform(d)) + 2))
-    .force("center", d3.forceCenter(width / 2, height / 2))
-    .alphaDecay(0.05);
+      d3.forceCollide().radius(d => sizeScale(d.degree) + 2))
+    .force("center", d3.forceCenter(width / 2, height / 2));
 
-  const link = container.append("g")
-    .selectAll("line")
+  const link = container.selectAll("line")
     .data(graph.links)
     .enter()
     .append("line");
 
-  const node = container.append("g")
-    .selectAll("circle")
+  const node = container.selectAll("circle")
     .data(graph.nodes)
     .enter()
     .append("circle")
-    .attr("r", d => sizeScale(degreeTransform(d)))
-    .attr("fill", d => colorScale(degreeTransform(d)))
+    .attr("r", d => sizeScale(d.degree))
+    .attr("fill", d => colorScale(d.degree))
     .on("mouseover", (event, d) => {
-
       tooltip.style("display","block")
         .html(`Node: ${d.id}<br>Degree: ${d.degree}`);
-
-      node.style("opacity", o =>
-        isNeighbor(d, o) ? 1 : 0.1);
-
-      link.style("stroke-opacity", o =>
-        o.source.id === d.id || o.target.id === d.id ? 0.8 : 0.05);
     })
     .on("mousemove", (event) => {
-      tooltip.style("left", (event.pageX + 10) + "px")
-             .style("top", (event.pageY + 10) + "px");
+      tooltip.style("left", event.pageX+10+"px")
+             .style("top", event.pageY+10+"px");
     })
     .on("mouseout", () => {
       tooltip.style("display","none");
-      node.style("opacity",1);
-      link.style("stroke-opacity",0.2);
     })
     .call(d3.drag()
-      .on("start", dragstarted)
-      .on("drag", dragged)
-      .on("end", dragended)
-    );
+      .on("start",(event,d)=>{
+        if(!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx=d.x; d.fy=d.y;
+      })
+      .on("drag",(event,d)=>{
+        d.fx=event.x; d.fy=event.y;
+      })
+      .on("end",(event,d)=>{
+        if(!event.active) simulation.alphaTarget(0);
+        d.fx=null; d.fy=null;
+      }));
 
-  simulation.on("tick", () => {
-
+  simulation.on("tick",()=>{
     link
-      .attr("x1", d => d.source.x)
-      .attr("y1", d => d.source.y)
-      .attr("x2", d => d.target.x)
-      .attr("y2", d => d.target.y);
+      .attr("x1",d=>d.source.x)
+      .attr("y1",d=>d.source.y)
+      .attr("x2",d=>d.target.x)
+      .attr("y2",d=>d.target.y);
 
     node
-      .attr("cx", d => d.x)
-      .attr("cy", d => d.y);
+      .attr("cx",d=>d.x)
+      .attr("cy",d=>d.y);
   });
-
-  function dragstarted(event, d) {
-    if (!event.active) simulation.alphaTarget(0.3).restart();
-    d.fx = d.x;
-    d.fy = d.y;
-  }
-
-  function dragged(event, d) {
-    d.fx = event.x;
-    d.fy = event.y;
-  }
-
-  function dragended(event, d) {
-    if (!event.active) simulation.alphaTarget(0);
-    d.fx = null;
-    d.fy = null;
-  }
 }
 
-// Degree Distribution Panel
-function drawDegreeDistribution(graph) {
+// ------------------
+// Degree Plots
+// ------------------
+function drawDegreePlots(graph){
 
-  degreeSVG.selectAll("*").remove();
+  histSVG.selectAll("*").remove();
+  logSVG.selectAll("*").remove();
 
-  const degrees = graph.nodes.map(d => d.degree);
+  const degrees = graph.nodes.map(d=>d.degree);
 
-  const width = document.getElementById("degreePanel").clientWidth;
-  const height = document.getElementById("degreePanel").clientHeight;
-
-  const x = d3.scaleLinear()
-    .domain([0, d3.max(degrees)])
-    .range([40, width - 20]);
+  const width = document.getElementById("histogram").clientWidth;
+  const height = document.getElementById("histogram").clientHeight;
 
   const bins = d3.bin()(degrees);
 
-  const y = d3.scaleLinear()
-    .domain([0, d3.max(bins, d => d.length)])
-    .range([height - 30, 20]);
+  const x = d3.scaleLinear()
+    .domain([0,d3.max(degrees)])
+    .range([30,width-10]);
 
-  degreeSVG.selectAll("rect")
+  const y = d3.scaleLinear()
+    .domain([0,d3.max(bins,d=>d.length)])
+    .range([height-30,10]);
+
+  histSVG.selectAll("rect")
     .data(bins)
     .enter()
     .append("rect")
-    .attr("x", d => x(d.x0))
-    .attr("y", d => y(d.length))
-    .attr("width", d => x(d.x1) - x(d.x0) - 2)
-    .attr("height", d => height - 30 - y(d.length))
-    .attr("fill", "steelblue")
-    .attr("opacity",0.8);
+    .attr("x",d=>x(d.x0))
+    .attr("y",d=>y(d.length))
+    .attr("width",d=>x(d.x1)-x(d.x0)-2)
+    .attr("height",d=>height-30-y(d.length))
+    .attr("fill","#4682b4");
+
+  // Log-log plot
+  const freq = {};
+  degrees.forEach(k=>{
+    freq[k]=(freq[k]||0)+1;
+  });
+
+  const data = Object.entries(freq)
+    .map(([k,v])=>({k:+k,v}));
+
+  const logX = d3.scaleLog()
+    .domain([1,d3.max(data,d=>d.k)])
+    .range([30,width-10]);
+
+  const logY = d3.scaleLog()
+    .domain([1,d3.max(data,d=>d.v)])
+    .range([height-30,10]);
+
+  logSVG.selectAll("circle")
+    .data(data)
+    .enter()
+    .append("circle")
+    .attr("cx",d=>logX(d.k))
+    .attr("cy",d=>logY(d.v))
+    .attr("r",3)
+    .attr("fill","black");
 }

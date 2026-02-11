@@ -9,6 +9,21 @@ const tooltip = d3.select("#tooltip");
 
 const container = svg.append("g");
 
+// Sidebar Toggle
+document.getElementById("sidebarToggle")
+  .addEventListener("click", () => {
+    document.getElementById("sidebar")
+      .classList.toggle("collapsed");
+  });
+
+// Section Toggle
+document.querySelectorAll(".section-header")
+  .forEach(header => {
+    header.addEventListener("click", () => {
+      header.parentElement.classList.toggle("open");
+    });
+  });
+
 svg.call(
   d3.zoom().on("zoom", (event) => {
     container.attr("transform", event.transform);

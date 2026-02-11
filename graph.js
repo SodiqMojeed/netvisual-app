@@ -72,10 +72,15 @@ function loadGML(path, fileName) {
   d3.text(path)
     .then(text => {
 
+      if (!text || text.trim().length === 0) {
+        console.warn("Empty GML file.");
+        return;
+      }
+
       const graph = parseGML(text);
 
       if (graph.nodes.length === 0) {
-        alert("No nodes detected. Check GML format.");
+        console.warn("Parsed graph has 0 nodes.");
         return;
       }
 
@@ -86,8 +91,8 @@ function loadGML(path, fileName) {
 
     })
     .catch(err => {
-      console.error("Failed to load GML:", err);
-      alert("Failed to load GML file.");
+      console.error("GML load error:", err);
+      // ❌ No alert anymore
     });
 }
 

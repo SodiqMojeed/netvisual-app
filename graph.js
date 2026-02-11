@@ -22,16 +22,14 @@ svg.call(
 d3.json("networks.json")
   .then(files => {
 
-    console.log("Networks loaded:", files);
-
     const select = d3.select("#networkSelect");
 
     select.selectAll("option")
       .data(files)
       .enter()
       .append("option")
-      .attr("value", d => d)
-      .text(d => d.replace(".gml",""));
+      .attr("value", d => d)              // KEEP .gml internally
+      .text(d => d.replace(".gml",""));  // Display without .gml
 
   })
   .catch(err => {
@@ -46,11 +44,6 @@ document.getElementById("loadBtn")
   .addEventListener("click", () => {
 
     const file = document.getElementById("networkSelect").value;
-
-    if (!file) {
-      alert("Please select a network.");
-      return;
-    }
 
     loadGML("networks/" + file, file);
   });

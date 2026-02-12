@@ -137,27 +137,55 @@ document.getElementById("loadBtn")
 
 function loadGML(path, fileName) {
 
-  // Open sidebar sections first
-  document.getElementById("propertiesSection").classList.add("open");
-  document.getElementById("degreeSection").classList.add("open");
-  document.getElementById("descriptionSection").classList.add("open");
+  const exportBtn = document.getElementById("exportBtn");
+  exportBtn.disabled = true;   // Disable until successful load
 
-  setTimeout(() => {
+  // Clear previous visuals
+  container.selectAll("*").remove();
+  histSVG.selectAll("*").remove();
+  logSVG.selectAll("*").remove();
+  document.getElementById("propertiesContent").innerHTML = "";
+  document.getElementById("description").innerHTML =
+    "Loading network...";
 
-    d3.text(path)
-      .then(text => {
+  // Open sidebar sections
+  document.getElementById("propertiesSection")
+    .classList.add("open");
+  document.getElementById("degreeSection")
+    .classList.add("open");
+  document.getElementById("descriptionSection")
+    .classList.add("open");
 
-        const graph = parseGML(text);
+  // Fetch GML
+  d3.text(path)
+    .then(text => {
 
-        computeProperties(graph);
-        drawGraph(graph);
-        drawDegreePlots(graph);
-        loadMetadata(fileName);
+      const graph = parseGML(text);
 
-      })
-      .catch(err => console.error("Failed to load GML:", err));
+      // Basic validation
+      if (!graph.nodes.length) {
+        document.getElementById("description").innerHTML =
+          "Invalid or empty GML file.";
+        return;
+      }
 
-  }, 200);
+      // Compute + Render
+      computeProperties(graph);
+      drawGraph(graph);
+      drawDegreePlots(graph);
+      loadMetadata(fileName);
+
+      // Enable export only after success
+      exportBtn.disabled = false;
+
+    })
+    .catch(error => {
+
+      console.error("Failed to load GML:", error);
+
+      document.getElementById("description").innerHTML =
+        "Failed to load GML file.";
+    });
 }
 
 // =============================
@@ -801,4 +829,69 @@ function drawDegreePlots(graph){
     .attr("text-anchor", "middle")
     .attr("font-size", "12px")
     .text("log₁₀(P(k))");
+}
+
+// ========================================
+// EXPORT SVG AS PNG (STATE-PRESERVING)
+// ========================================
+
+document.getElementById("exportBtn")
+  .addEventListener("click", exportPNG);
+
+function exportPNG() {
+
+  const svgNode = document.getElementById("networkSVG");
+
+  if (!svgNode) return;
+
+  const serializer = new XMLSerializer();
+  let source = serializer.serializeToString(svgNode);
+
+  // Add XML namespace if missing
+  if (!source.match(/^<svg[^>]+xmlns="http:\/\/www\.w3\.org\/2000\/svg"/)) {
+    source = source.replace(
+      /^<svg/,
+      '<svg xmlns="http://www.w3.org/2000/svg"'
+    );
+  }
+
+  const canvas = document.createElement("canvas");
+  const width = svgNode.clientWidth;
+  const height = svgNode.clientHeight;
+
+  canvas.width = width;
+  canvas.height = height;
+
+  const ctx = canvas.getContext("2d");
+
+  // Set background color (same as your graph container)
+  ctx.fillStyle = window.getComputedStyle(
+    document.getElementById("graphContainer")
+  ).backgroundColor;
+
+  ctx.fillRect(0, 0, width, height);
+
+  const img = new Image();
+
+  const svgBlob = new Blob([source], {
+    type: "image/svg+xml;charset=utf-8"
+  });
+
+  const url = URL.createObjectURL(svgBlob);
+
+  img.onload = function() {
+
+    ctx.drawImage(img, 0, 0);
+
+    URL.revokeObjectURL(url);
+
+    const pngURL = canvas.toDataURL("image/png");
+
+    const link = document.createElement("a");
+    link.download = "network.png";
+    link.href = pngURL;
+    link.click();
+  };
+
+  img.src = url;
 }

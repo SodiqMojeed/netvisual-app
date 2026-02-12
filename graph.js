@@ -418,7 +418,7 @@ function computeProperties(graph) {
     ]);
   }
 
-  let table = "<table><tr><th>#</th><th>Metric</th><th>Value</th></tr>";
+  let table = "<table><tr><th>#</th><th>Property</th><th>Value</th></tr>";
 
   metrics.forEach((row,i)=>{
     table += `<tr>

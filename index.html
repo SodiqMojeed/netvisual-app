@@ -34,6 +34,21 @@ body {
 #resizeHandle:hover {
   background: #999;
 }
+   
+/* =============
+   Button Styling
+=============== *//
+.icon-btn {
+  font-size: 16px;
+  background: white;
+  border: 1px solid #ccc;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.icon-btn:hover {
+  background: #f0f0f0;
+}
 
 /* =======================
    TOP CONTROLS
@@ -174,7 +189,9 @@ th {
      CONTROLS
 ======================= -->
 <div id="controls">
-  <button id="sidebarToggle">☰</button>
+  <button id="sidebarToggle" class="icon-btn">
+   ▶
+  </button>
   <strong>Network</strong>
   <select id="networkSelect"></select>
   <button id="loadBtn">Visualize</button>

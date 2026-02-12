@@ -229,7 +229,7 @@ function computeProperties(graph) {
   const m = graph.links.length;
 
   const degree = {};
-  graph.nodes.forEach(n => degree[n.id] = 0);
+  graph.nodes.forEach(node => degree[node.id] = 0);
 
   graph.links.forEach(l => {
     degree[l.source]++;
@@ -238,13 +238,49 @@ function computeProperties(graph) {
 
   const degrees = Object.values(degree);
 
+  // ==========================
+  // Degree Assortativity
+  // ==========================
+
+  const edgeDegrees = graph.links.map(l => {
+    return {
+      k1: degree[l.source],
+      k2: degree[l.target]
+    };
+  });
+
+  const mean1 = d3.mean(edgeDegrees, d => d.k1);
+  const mean2 = d3.mean(edgeDegrees, d => d.k2);
+
+  const numerator = d3.sum(edgeDegrees,
+    d => (d.k1 - mean1) * (d.k2 - mean2)
+  );
+
+  const denom1 = Math.sqrt(
+    d3.sum(edgeDegrees, d => Math.pow(d.k1 - mean1, 2))
+  );
+
+  const denom2 = Math.sqrt(
+    d3.sum(edgeDegrees, d => Math.pow(d.k2 - mean2, 2))
+  );
+
+  const assortativity =
+    (denom1 * denom2 === 0)
+      ? 0
+      : numerator / (denom1 * denom2);
+
+  // ==========================
+  // Metrics Table
+  // ==========================
+
   const metrics = [
     ["Nodes", n],
     ["Edges", m],
-    ["Average Degree", d3.mean(degrees).toFixed(2)],
     ["Density", ((2*m)/(n*(n-1))).toFixed(4)],
-    ["Max Degree", d3.max(degrees)],
-    ["Min Degree", d3.min(degrees)]
+    ["Avg. Degree", d3.mean(degrees).toFixed(2)],
+    ["Max. Degree", d3.max(degrees)],
+    ["Min. Degree", d3.min(degrees)],
+    ["Degree Assortativity", assortativity.toFixed(4)]
   ];
 
   let table = "<table><tr><th>#</th><th>Metric</th><th>Value</th></tr>";

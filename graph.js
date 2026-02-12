@@ -396,12 +396,12 @@ function computeProperties(graph) {
   const metrics = [
     ["Nodes", n],
     ["Edges", m],
-    ["Average Degree", d3.mean(degrees).toFixed(2)],
     ["Density", ((2*m)/(n*(n-1))).toFixed(4)],
-    ["Max Degree", d3.max(degrees)],
-    ["Min Degree", d3.min(degrees)],
+    ["Avg. Degree", d3.mean(degrees).toFixed(2)],
+    ["Max. Degree", d3.max(degrees)],
+    ["Min. Degree", d3.min(degrees)],
     ["Degree Assortativity", assortativity.toFixed(4)],
-    ["Average Clustering Coefficient", avgClustering.toFixed(4)],
+    ["Avg. Clustering Coefficient", avgClustering.toFixed(4)],
     ["Transitivity", transitivity.toFixed(4)],
     ["Is the network connected?", isConnected ? "Yes" : "No"]
   ];

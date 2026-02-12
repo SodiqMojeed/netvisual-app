@@ -348,16 +348,18 @@ function computeProperties(graph) {
 
   const isConnected = components === 1;
 
-  // ===============================
-  // Average Shortest Path Length
+    // ===============================
+  // Average Shortest Path Length + Diameter
   // ===============================
 
   let avgPathLength = null;
+  let diameter = null;
 
   if (isConnected) {
 
     let totalDist = 0;
     let pairCount = 0;
+    let maxDistance = 0;
 
     graph.nodes.forEach(sourceNode => {
 
@@ -381,12 +383,16 @@ function computeProperties(graph) {
         if (d > 0) {
           totalDist += d;
           pairCount++;
+          if (d > maxDistance) {
+            maxDistance = d;
+          }
         }
       });
 
     });
 
     avgPathLength = totalDist / pairCount;
+    diameter = maxDistance;
   }
 
   // ===============================
@@ -406,11 +412,17 @@ function computeProperties(graph) {
     ["Is the network connected?", isConnected ? "Yes" : "No"]
   ];
 
-  if (isConnected) {
+    if (isConnected) {
     metrics.push([
       "Average Shortest Path Length",
       avgPathLength.toFixed(4)
     ]);
+
+    metrics.push([
+      "Diameter",
+      diameter
+    ]);
+
   } else {
     metrics.push([
       "Number of Disconnected Components",

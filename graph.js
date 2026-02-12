@@ -347,7 +347,7 @@ function computeProperties(graph) {
 
   const transitivity =
     tripleCount === 0 ? 0 :
-    (3 * triangleCount) / tripleCount;
+    triangleCount / tripleCount;
 
   // ===============================
   // Connectivity (BFS)

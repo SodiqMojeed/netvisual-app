@@ -283,7 +283,7 @@ function computeProperties(graph) {
     ["Degree Assortativity", assortativity.toFixed(4)]
   ];
 
-  let table = "<table><tr><th>#</th><th>Metric</th><th>Value</th></tr>";
+  let table = "<table><tr><th>#</th><th>Property</th><th>Value</th></tr>";
 
   metrics.forEach((row,i)=>{
     table += `<tr>

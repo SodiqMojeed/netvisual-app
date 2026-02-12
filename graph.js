@@ -841,16 +841,14 @@ document.getElementById("exportBtn")
 function exportPNG() {
 
   const svgNode = document.getElementById("networkSVG");
-
   if (!svgNode) return;
 
   const serializer = new XMLSerializer();
   let source = serializer.serializeToString(svgNode);
 
-  // Add XML namespace if missing
-  if (!source.match(/^<svg[^>]+xmlns="http:\/\/www\.w3\.org\/2000\/svg"/)) {
+  if (!source.includes("xmlns")) {
     source = source.replace(
-      /^<svg/,
+      "<svg",
       '<svg xmlns="http://www.w3.org/2000/svg"'
     );
   }
@@ -864,33 +862,29 @@ function exportPNG() {
 
   const ctx = canvas.getContext("2d");
 
-  // Set background color (same as your graph container)
-  ctx.fillStyle = window.getComputedStyle(
+  // Preserve canvas background color
+  const bgColor = window.getComputedStyle(
     document.getElementById("graphContainer")
   ).backgroundColor;
 
+  ctx.fillStyle = bgColor;
   ctx.fillRect(0, 0, width, height);
 
   const img = new Image();
-
-  const svgBlob = new Blob([source], {
-    type: "image/svg+xml;charset=utf-8"
-  });
-
+  const svgBlob = new Blob([source], {type: "image/svg+xml;charset=utf-8"});
   const url = URL.createObjectURL(svgBlob);
 
   img.onload = function() {
 
     ctx.drawImage(img, 0, 0);
-
     URL.revokeObjectURL(url);
-
-    const pngURL = canvas.toDataURL("image/png");
 
     const link = document.createElement("a");
     link.download = "network.png";
-    link.href = pngURL;
+    link.href = canvas.toDataURL("image/png");
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
   };
 
   img.src = url;

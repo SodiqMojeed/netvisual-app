@@ -228,62 +228,168 @@ function computeProperties(graph) {
   const n = graph.nodes.length;
   const m = graph.links.length;
 
-  const degree = {};
-  graph.nodes.forEach(node => degree[node.id] = 0);
+  // ===============================
+  // Build adjacency list
+  // ===============================
+
+  const adj = {};
+  graph.nodes.forEach(node => adj[node.id] = new Set());
 
   graph.links.forEach(l => {
-    degree[l.source]++;
-    degree[l.target]++;
+    adj[l.source].add(l.target);
+    adj[l.target].add(l.source);
+  });
+
+  // ===============================
+  // Degree
+  // ===============================
+
+  const degree = {};
+  graph.nodes.forEach(node => {
+    degree[node.id] = adj[node.id].size;
   });
 
   const degrees = Object.values(degree);
 
-  // ==========================
-  // Degree Assortativity
-  // ==========================
+  // ===============================
+  // Average Clustering Coefficient
+  // ===============================
 
-  const edgeDegrees = graph.links.map(l => {
-    return {
-      k1: degree[l.source],
-      k2: degree[l.target]
-    };
+  let clusteringSum = 0;
+  let triangleTriples = 0;
+  let connectedTriples = 0;
+
+  graph.nodes.forEach(node => {
+
+    const neighbors = Array.from(adj[node.id]);
+    const k = neighbors.length;
+
+    if (k < 2) return;
+
+    let linksBetweenNeighbors = 0;
+
+    for (let i = 0; i < k; i++) {
+      for (let j = i+1; j < k; j++) {
+        if (adj[neighbors[i]].has(neighbors[j])) {
+          linksBetweenNeighbors++;
+        }
+      }
+    }
+
+    clusteringSum += (2 * linksBetweenNeighbors) / (k * (k - 1));
+
+    triangleTriples += linksBetweenNeighbors;
+    connectedTriples += k * (k - 1) / 2;
   });
 
-  const mean1 = d3.mean(edgeDegrees, d => d.k1);
-  const mean2 = d3.mean(edgeDegrees, d => d.k2);
+  const avgClustering = clusteringSum / n;
 
-  const numerator = d3.sum(edgeDegrees,
-    d => (d.k1 - mean1) * (d.k2 - mean2)
-  );
+  const transitivity = 
+    connectedTriples === 0 ? 0 :
+    (3 * triangleTriples) / connectedTriples;
 
-  const denom1 = Math.sqrt(
-    d3.sum(edgeDegrees, d => Math.pow(d.k1 - mean1, 2))
-  );
+  // ===============================
+  // Connectivity (BFS)
+  // ===============================
 
-  const denom2 = Math.sqrt(
-    d3.sum(edgeDegrees, d => Math.pow(d.k2 - mean2, 2))
-  );
+  const visited = new Set();
+  let components = 0;
 
-  const assortativity =
-    (denom1 * denom2 === 0)
-      ? 0
-      : numerator / (denom1 * denom2);
+  function bfs(start) {
+    const queue = [start];
+    visited.add(start);
 
-  // ==========================
-  // Metrics Table
-  // ==========================
+    while (queue.length) {
+      const node = queue.shift();
+      adj[node].forEach(neigh => {
+        if (!visited.has(neigh)) {
+          visited.add(neigh);
+          queue.push(neigh);
+        }
+      });
+    }
+  }
+
+  graph.nodes.forEach(node => {
+    if (!visited.has(node.id)) {
+      components++;
+      bfs(node.id);
+    }
+  });
+
+  const isConnected = components === 1;
+
+  // ===============================
+  // Average Shortest Path Length
+  // (only if connected)
+  // ===============================
+
+  let avgPathLength = null;
+
+  if (isConnected) {
+
+    let totalDist = 0;
+    let pairCount = 0;
+
+    graph.nodes.forEach(sourceNode => {
+
+      const distances = {};
+      const queue = [sourceNode.id];
+
+      graph.nodes.forEach(n => distances[n.id] = -1);
+      distances[sourceNode.id] = 0;
+
+      while (queue.length) {
+        const node = queue.shift();
+        adj[node].forEach(neigh => {
+          if (distances[neigh] === -1) {
+            distances[neigh] = distances[node] + 1;
+            queue.push(neigh);
+          }
+        });
+      }
+
+      Object.values(distances).forEach(d => {
+        if (d > 0) {
+          totalDist += d;
+          pairCount++;
+        }
+      });
+
+    });
+
+    avgPathLength = totalDist / pairCount;
+  }
+
+  // ===============================
+  // Build Table
+  // ===============================
 
   const metrics = [
     ["Nodes", n],
     ["Edges", m],
+    ["Average Degree", d3.mean(degrees).toFixed(2)],
     ["Density", ((2*m)/(n*(n-1))).toFixed(4)],
-    ["Avg. Degree", d3.mean(degrees).toFixed(2)],
-    ["Max. Degree", d3.max(degrees)],
-    ["Min. Degree", d3.min(degrees)],
-    ["Degree Assortativity", assortativity.toFixed(4)]
+    ["Max Degree", d3.max(degrees)],
+    ["Min Degree", d3.min(degrees)],
+    ["Average Clustering Coefficient", avgClustering.toFixed(4)],
+    ["Transitivity", transitivity.toFixed(4)],
+    ["Is the network connected?", isConnected ? "Yes" : "No"]
   ];
 
-  let table = "<table><tr><th>#</th><th>Property</th><th>Value</th></tr>";
+  if (isConnected) {
+    metrics.push([
+      "Average Shortest Path Length",
+      avgPathLength.toFixed(4)
+    ]);
+  } else {
+    metrics.push([
+      "Number of Disconnected Components",
+      components
+    ]);
+  }
+
+  let table = "<table><tr><th>#</th><th>Metric</th><th>Value</th></tr>";
 
   metrics.forEach((row,i)=>{
     table += `<tr>

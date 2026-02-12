@@ -252,12 +252,41 @@ function computeProperties(graph) {
   const degrees = Object.values(degree);
 
   // ===============================
+  // Degree Assortativity
+  // ===============================
+
+  const edgeDegrees = graph.links.map(l => ({
+    k1: degree[l.source],
+    k2: degree[l.target]
+  }));
+
+  const mean1 = d3.mean(edgeDegrees, d => d.k1);
+  const mean2 = d3.mean(edgeDegrees, d => d.k2);
+
+  const numerator = d3.sum(edgeDegrees,
+    d => (d.k1 - mean1) * (d.k2 - mean2)
+  );
+
+  const denom1 = Math.sqrt(
+    d3.sum(edgeDegrees, d => Math.pow(d.k1 - mean1, 2))
+  );
+
+  const denom2 = Math.sqrt(
+    d3.sum(edgeDegrees, d => Math.pow(d.k2 - mean2, 2))
+  );
+
+  const assortativity =
+    (denom1 * denom2 === 0)
+      ? 0
+      : numerator / (denom1 * denom2);
+
+  // ===============================
   // Average Clustering Coefficient
   // ===============================
 
   let clusteringSum = 0;
-  let triangleTriples = 0;
-  let connectedTriples = 0;
+  let triangleCount = 0;
+  let tripleCount = 0;
 
   graph.nodes.forEach(node => {
 
@@ -278,15 +307,15 @@ function computeProperties(graph) {
 
     clusteringSum += (2 * linksBetweenNeighbors) / (k * (k - 1));
 
-    triangleTriples += linksBetweenNeighbors;
-    connectedTriples += k * (k - 1) / 2;
+    triangleCount += linksBetweenNeighbors;
+    tripleCount += k * (k - 1) / 2;
   });
 
   const avgClustering = clusteringSum / n;
 
-  const transitivity = 
-    connectedTriples === 0 ? 0 :
-    (3 * triangleTriples) / connectedTriples;
+  const transitivity =
+    tripleCount === 0 ? 0 :
+    (3 * triangleCount) / tripleCount;
 
   // ===============================
   // Connectivity (BFS)
@@ -321,7 +350,6 @@ function computeProperties(graph) {
 
   // ===============================
   // Average Shortest Path Length
-  // (only if connected)
   // ===============================
 
   let avgPathLength = null;
@@ -372,6 +400,7 @@ function computeProperties(graph) {
     ["Density", ((2*m)/(n*(n-1))).toFixed(4)],
     ["Max Degree", d3.max(degrees)],
     ["Min Degree", d3.min(degrees)],
+    ["Degree Assortativity", assortativity.toFixed(4)],
     ["Average Clustering Coefficient", avgClustering.toFixed(4)],
     ["Transitivity", transitivity.toFixed(4)],
     ["Is the network connected?", isConnected ? "Yes" : "No"]

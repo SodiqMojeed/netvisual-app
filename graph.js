@@ -2,6 +2,7 @@
 // GLOBAL SETUP
 // =============================
 
+let currentNetworkName = null;
 const svg = d3.select("#networkSVG");
 const histSVG = d3.select("#histSVG");
 const logSVG = d3.select("#logSVG");
@@ -137,8 +138,10 @@ document.getElementById("loadBtn")
 
 function loadGML(path, fileName) {
 
+  currentNetworkName = fileName.replace(".gml", "");
+
   const exportBtn = document.getElementById("exportBtn");
-  exportBtn.disabled = true;   // Disable until successful load
+  exportBtn.disabled = true;
 
   // Clear previous visuals
   container.selectAll("*").remove();
@@ -880,7 +883,11 @@ function exportPNG() {
     URL.revokeObjectURL(url);
 
     const link = document.createElement("a");
-    link.download = "network.png";
+    const fileName = currentNetworkName 
+      ? currentNetworkName + ".png"
+      : "network.png";
+
+    link.download = fileName;
     link.href = canvas.toDataURL("image/png");
     document.body.appendChild(link);
     link.click();

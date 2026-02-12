@@ -106,8 +106,13 @@ document.addEventListener("mouseup", () => {
 // LOAD DROPDOWN
 // =============================
 
-d3.json("networks.json")
-  .then(files => {
+d3.json("network-metadata.json")
+  .then(meta => {
+
+    window.networkMeta = meta;
+
+    const files = Object.keys(meta);
+
     const select = d3.select("#networkSelect");
 
     select.selectAll("option")
@@ -115,9 +120,8 @@ d3.json("networks.json")
       .enter()
       .append("option")
       .attr("value", d => d)
-      .text(d => d.replace(".gml",""));
-  })
-  .catch(err => console.error("Failed to load networks.json:", err));
+      .text(d => meta[d].label);
+  });
 
 // =============================
 // BUTTON EVENT
@@ -197,22 +201,19 @@ function loadGML(path, fileName) {
 
 function loadMetadata(fileName) {
 
-  d3.json("network-metadata.json")
-    .then(meta => {
+  if (window.networkMeta && window.networkMeta[fileName]) {
 
-      if (meta[fileName]) {
-        document.getElementById("description").innerHTML = `
-          <p><strong>Description:</strong><br>
-          ${meta[fileName].description}</p>
-          <p><strong>Citation:</strong><br>
-          ${meta[fileName].citation}</p>
-        `;
-      } else {
-        document.getElementById("description").innerHTML =
-          `<p>No metadata found for ${fileName}</p>`;
-      }
-    })
-    .catch(err => console.error("Metadata failed:", err));
+    const data = window.networkMeta[fileName];
+
+    document.getElementById("description").innerHTML = `
+      <p><strong>Description:</strong><br>${data.description}</p>
+      <p><strong>Citation:</strong><br>${data.citation}</p>
+    `;
+
+  } else {
+    document.getElementById("description").innerHTML =
+      `<p>No metadata found.</p>`;
+  }
 }
 
 // =============================

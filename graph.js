@@ -84,7 +84,9 @@ document.addEventListener("mousemove", (event) => {
 
   const newWidth = event.clientX;
 
-  if (newWidth > 250 && newWidth < 800) {
+  const maxWidth = window.innerWidth * 0.8;
+
+  if (newWidth > 250 && newWidth < maxWidth) {
     sidebar.style.width = newWidth + "px";
   }
 

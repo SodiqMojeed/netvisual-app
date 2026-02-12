@@ -29,8 +29,17 @@ svg.call(
 
 document.getElementById("sidebarToggle")
   .addEventListener("click", () => {
-    document.getElementById("sidebar")
-      .classList.toggle("collapsed");
+
+    const sidebar = document.getElementById("sidebar");
+    const button = document.getElementById("sidebarToggle");
+
+    sidebar.classList.toggle("collapsed");
+
+    if (sidebar.classList.contains("collapsed")) {
+      button.textContent = "▶";   // collapsed state
+    } else {
+      button.textContent = "◀";   // expanded state
+    }
 
     setTimeout(() => {
       if (window.currentSimulation) {
@@ -42,7 +51,17 @@ document.getElementById("sidebarToggle")
 document.querySelectorAll(".section-header")
   .forEach(header => {
     header.addEventListener("click", () => {
-      header.parentElement.classList.toggle("open");
+
+      const section = header.parentElement;
+      const arrow = header.querySelector(".arrow");
+
+      section.classList.toggle("open");
+
+      if (section.classList.contains("open")) {
+        arrow.textContent = "▼";
+      } else {
+        arrow.textContent = "▶";
+      }
     });
   });
 
